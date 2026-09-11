@@ -1258,7 +1258,7 @@ async function saveDrafts(){
 
 /* ==================== SOFASCORE ==================== */
 const SOFA_SEARCH_URL = 'https://api.sofascore.com/api/v1/search/all';
-const SOFA_IMG_PLAYER = id => `https://api.sofascore.app/api/v1/player/${id}/image`;
+const SOFA_IMG_PLAYER = id => `/api/proxy?url=https://api.sofascore.app/api/v1/player/${id}/image`;
 const SOFA_IMG_TEAM   = id => `https://api.sofascore.app/api/v1/team/${id}/image`;
 const SOFA_IMG_MANAGER = id => `https://api.sofascore.app/api/v1/manager/${id}/image`;
 

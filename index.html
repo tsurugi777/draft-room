@@ -1219,33 +1219,39 @@ function isCoachColumn(header){
 /* ==================== STORAGE ==================== */
 const hasNativeStorage = !!(window.storage && typeof window.storage.get === 'function' && typeof window.storage.set === 'function');
 
+const API_BASE = '/api/state'; // em produção no Vercel
+
 async function storageGet(key){
-  if(hasNativeStorage){
-    try{
-      const res = await window.storage.get(key, SHARED);
-      if(!res || res.value === undefined || res.value === null) return null;
-      return JSON.parse(res.value);
-    }catch(e){ console.error('storage.get falhou', key, e); return null; }
-  }
   try{
-    const raw = localStorage.getItem('draftapp_' + key);
-    if(raw === null) return null;
-    return JSON.parse(raw);
-  }catch(e){ console.error('localStorage.get falhou', key, e); return null; }
+    const res = await fetch(`${API_BASE}?key=${encodeURIComponent(key)}`);
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    return data; // já vem como objeto/array ou null
+  }catch(e){
+    console.error('storageGet falhou', key, e);
+    return null;
+  }
 }
 
 async function storageSet(key, value){
   pendingWrites++;
   try{
-    const serialized = JSON.stringify(value);
-    if(hasNativeStorage){
-      await window.storage.set(key, serialized, SHARED);
-    } else {
-      localStorage.setItem('draftapp_' + key, serialized);
-    }
-  }catch(e){ console.error('Falha ao salvar', key, e); throw e; }
-  finally{ pendingWrites--; lastLocalWriteAt = Date.now(); }
+    const res = await fetch(`${API_BASE}?key=${encodeURIComponent(key)}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(value)
+    });
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+  }catch(e){
+    console.error('storageSet falhou', key, e);
+    throw e;
+  }finally{
+    pendingWrites--;
+    lastLocalWriteAt = Date.now();
+  }
 }
+
+const hasNativeStorage = false;
 
 async function saveItems(){
   dirtyLocal = true;
@@ -1258,9 +1264,9 @@ async function saveDrafts(){
 
 /* ==================== SOFASCORE ==================== */
 const SOFA_SEARCH_URL = 'https://api.sofascore.com/api/v1/search/all';
-const SOFA_IMG_PLAYER  = id => `${PROXY_BASE}?type=player&id=${id}`;
-const SOFA_IMG_TEAM    = id => `${PROXY_BASE}?type=team&id=${id}`;
-const SOFA_IMG_MANAGER = id => `${PROXY_BASE}?type=manager&id=${id}`;
+const SOFA_IMG_PLAYER = id => `https://api.sofascore.app/api/v1/player/${id}/image`;
+const SOFA_IMG_TEAM   = id => `https://api.sofascore.app/api/v1/team/${id}/image`;
+const SOFA_IMG_MANAGER = id => `https://api.sofascore.app/api/v1/manager/${id}/image`;
 
 function searchCacheKey(q){ return 'sofa_search_v2_' + q.trim().toLowerCase().replace(/\s+/g,'_').slice(0,60); }
 function getSearchCache(q){

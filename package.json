@@ -1,7 +1,0 @@
-{
-  "name": "sala-de-draft",
-  "version": "1.0.0",
-  "dependencies": {
-    "@neondatabase/serverless": "^0.9.0"
-  }
-}

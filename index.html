@@ -1258,9 +1258,9 @@ async function saveDrafts(){
 
 /* ==================== SOFASCORE ==================== */
 const SOFA_SEARCH_URL = 'https://api.sofascore.com/api/v1/search/all';
-const SOFA_IMG_PLAYER = id => `/api/proxy?url=https://api.sofascore.app/api/v1/player/${id}/image`;
-const SOFA_IMG_TEAM   = id => `https://api.sofascore.app/api/v1/team/${id}/image`;
-const SOFA_IMG_MANAGER = id => `https://api.sofascore.app/api/v1/manager/${id}/image`;
+const SOFA_IMG_PLAYER  = id => `${PROXY_BASE}?type=player&id=${id}`;
+const SOFA_IMG_TEAM    = id => `${PROXY_BASE}?type=team&id=${id}`;
+const SOFA_IMG_MANAGER = id => `${PROXY_BASE}?type=manager&id=${id}`;
 
 function searchCacheKey(q){ return 'sofa_search_v2_' + q.trim().toLowerCase().replace(/\s+/g,'_').slice(0,60); }
 function getSearchCache(q){

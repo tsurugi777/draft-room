@@ -865,7 +865,7 @@ tr:last-child td{border-bottom:none;}
       <div class="nav-item" data-tab="draft"><span class="dot"></span>Draft ao vivo</div>
       <div class="nav-item" data-tab="times"><span class="dot"></span>Times</div>
     </nav>
-    <div class="sidebar-foot">Dados compartilhados: visíveis para todos que abrirem este app. Atualiza a cada poucos segundos.</div>
+    <div class="sidebar-foot">Dados sincronizados via Firebase Firestore em tempo real.</div>
   </aside>
 
   <main class="main">
@@ -1102,6 +1102,12 @@ tr:last-child td{border-bottom:none;}
   </main>
 </div>
 
+<!-- ==================== FIREBASE ==================== -->
+<!-- Carrega o wrapper do Firebase. É um módulo, então roda antes do
+     DOMContentLoaded e define window.storage / window.storageRealtime
+     antes do script principal ser executado. -->
+<script type="module" src="./firebase.js"></script>
+
 <script>
 (function(){
 "use strict";
@@ -1200,6 +1206,7 @@ let dirtyLocal = false;
 let presetModel = [];
 let showRoundsDetail = false;
 let isDraggingToken = false;
+let realtimeUnsubs = [];
 
 function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,8); }
 function isPlayer(it){ return (it.type || 'player') === 'player'; }
@@ -1217,41 +1224,41 @@ function isCoachColumn(header){
 }
 
 /* ==================== STORAGE ==================== */
-const hasNativeStorage = !!(window.storage && typeof window.storage.get === 'function' && typeof window.storage.set === 'function');
-
-const API_BASE = '/api/state'; // em produção no Vercel
+// Detecção dinâmica: permite que window.storage seja definido depois
+// (ex.: por um módulo Firebase que carrega de forma assíncrona).
+function hasNativeStorage(){
+  return !!(window.storage
+    && typeof window.storage.get === 'function'
+    && typeof window.storage.set === 'function');
+}
 
 async function storageGet(key){
-  try{
-    const res = await fetch(`${API_BASE}?key=${encodeURIComponent(key)}`);
-    if(!res.ok) throw new Error('HTTP ' + res.status);
-    const data = await res.json();
-    return data; // já vem como objeto/array ou null
-  }catch(e){
-    console.error('storageGet falhou', key, e);
-    return null;
+  if(hasNativeStorage()){
+    try{
+      const res = await window.storage.get(key, SHARED);
+      if(!res || res.value === undefined || res.value === null) return null;
+      return JSON.parse(res.value);
+    }catch(e){ console.error('storage.get falhou', key, e); return null; }
   }
+  try{
+    const raw = localStorage.getItem('draftapp_' + key);
+    if(raw === null) return null;
+    return JSON.parse(raw);
+  }catch(e){ console.error('localStorage.get falhou', key, e); return null; }
 }
 
 async function storageSet(key, value){
   pendingWrites++;
   try{
-    const res = await fetch(`${API_BASE}?key=${encodeURIComponent(key)}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(value)
-    });
-    if(!res.ok) throw new Error('HTTP ' + res.status);
-  }catch(e){
-    console.error('storageSet falhou', key, e);
-    throw e;
-  }finally{
-    pendingWrites--;
-    lastLocalWriteAt = Date.now();
-  }
+    const serialized = JSON.stringify(value);
+    if(hasNativeStorage()){
+      await window.storage.set(key, serialized, SHARED);
+    } else {
+      localStorage.setItem('draftapp_' + key, serialized);
+    }
+  }catch(e){ console.error('Falha ao salvar', key, e); throw e; }
+  finally{ pendingWrites--; lastLocalWriteAt = Date.now(); }
 }
-
-const hasNativeStorage = false;
 
 async function saveItems(){
   dirtyLocal = true;
@@ -1264,9 +1271,11 @@ async function saveDrafts(){
 
 /* ==================== SOFASCORE ==================== */
 const SOFA_SEARCH_URL = 'https://api.sofascore.com/api/v1/search/all';
-const SOFA_IMG_PLAYER = id => `https://api.sofascore.app/api/v1/player/${id}/image`;
-const SOFA_IMG_TEAM   = id => `https://api.sofascore.app/api/v1/team/${id}/image`;
-const SOFA_IMG_MANAGER = id => `https://api.sofascore.app/api/v1/manager/${id}/image`;
+const PROXY_BASE = 'https://img.sofascore.com/api/v1'; // ajuste se usar outro proxy
+
+const SOFA_IMG_PLAYER  = id => `${PROXY_BASE}/player/${id}/image`;
+const SOFA_IMG_TEAM    = id => `${PROXY_BASE}/team/${id}/image`;
+const SOFA_IMG_MANAGER = id => `${PROXY_BASE}/manager/${id}/image`;
 
 function searchCacheKey(q){ return 'sofa_search_v2_' + q.trim().toLowerCase().replace(/\s+/g,'_').slice(0,60); }
 function getSearchCache(q){
@@ -2891,7 +2900,6 @@ function pruneFormation(draft, teamIndex){
   Object.keys(f.positions).forEach(pid=>{ if(!ids.has(pid)) delete f.positions[pid]; });
 }
 
-/* ============ RENDER PITCH: FOTO + NOME ============ */
 function renderPitch(draft, teamIndex, teamPlayers){
   const f = ensureFormationState(draft, teamIndex);
   const tokensHtml = teamPlayers.map(p=>{
@@ -2904,17 +2912,11 @@ function renderPitch(draft, teamIndex, teamPlayers){
     if(p.type === 'coach') classes.push('coach-token');
     if(!hasPhoto) classes.push('no-photo');
 
-    // O círculo do avatar contém:
-    // - Se tiver foto: <img> por cima + iniciais atrás (fallback caso a img falhe)
-    // - Se não tiver: só iniciais
-    // O nome do jogador fica SEMPRE abaixo, na div .token-name
     const initialsTxt = escapeHtml(initials(p.name));
     const photoUrl = hasPhoto ? escapeHtml(p.photo) : '';
 
     let avatarInner;
     if(hasPhoto){
-      // Iniciais ficam atrás, e a img fica por cima. Se a img falhar, esconde ela
-      // e as iniciais aparecem (ficam no z-index 1, abaixo).
       avatarInner =
         `<span class="token-initials">${initialsTxt}</span>` +
         `<img class="token-photo" src="${photoUrl}" alt="${escapeHtml(p.name)}" loading="lazy" ` +
@@ -3234,6 +3236,52 @@ async function pollForUpdates(){
   }catch(e){ console.error('Falha ao sincronizar', e); }
 }
 
+/* Sincronização em tempo real via Firestore onSnapshot (se disponível) */
+function setupRealtimeSync(){
+  if(!window.storageRealtime || typeof window.storageRealtime.subscribe !== 'function'){
+    // Sem tempo real: cai para polling
+    setInterval(pollForUpdates, 4000);
+    return;
+  }
+  function applySnapshot(key, rawValue){
+    if(isDraggingToken) return;
+    if(pendingWrites > 0) return;
+    if(dirtyLocal) return;
+    if(Date.now() - lastLocalWriteAt < SYNC_COOLDOWN_MS) return;
+
+    let fresh = null;
+    if(rawValue !== null && rawValue !== undefined){
+      try{ fresh = JSON.parse(rawValue); }
+      catch(e){ console.warn('Snapshot inválido para', key); return; }
+    }
+
+    if(key === 'players'){
+      const next = fresh === null ? [] : fresh.map(it => ({ ...it, type: it.type === 'coach' ? 'coach' : 'player' }));
+      if(JSON.stringify(next) === JSON.stringify(items)) return;
+      items = next;
+      if(currentTab === 'jogadores'){ renderPosDatalist(); renderPlayersTable(); renderCoachesTable(); updateSubtabCounts(); }
+    } else if(key === 'drafts'){
+      const next = fresh === null ? [] : fresh;
+      next.forEach(dr => { if(!dr.formations || typeof dr.formations !== 'object') dr.formations = {}; });
+      if(JSON.stringify(next) === JSON.stringify(drafts)) return;
+      drafts = next;
+      if(currentTab === 'draft') renderDraftTab();
+      else if(currentTab === 'times') renderTimesTab();
+    }
+  }
+  try{
+    realtimeUnsubs.push(window.storageRealtime.subscribe('players', s => {
+      applySnapshot('players', s ? s.value : null);
+    }));
+    realtimeUnsubs.push(window.storageRealtime.subscribe('drafts', s => {
+      applySnapshot('drafts', s ? s.value : null);
+    }));
+  }catch(e){
+    console.warn('Falha ao assinar tempo real, usando polling:', e);
+    setInterval(pollForUpdates, 4000);
+  }
+}
+
 /* ==================== UTIL ==================== */
 function distinctPositions(){
   return [...new Set(playersOnly().map(p => (p.position||'').trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
@@ -3246,6 +3294,16 @@ function escapeHtml(str){
 
 /* ==================== INIT ==================== */
 async function init(){
+  // Se firebase.js ainda não carregou, espera um pouco (até 3s)
+  let waited = 0;
+  while(!hasNativeStorage() && waited < 3000){
+    await new Promise(r => setTimeout(r, 100));
+    waited += 100;
+  }
+  if(!hasNativeStorage()){
+    console.warn('[Sala de Draft] window.storage não encontrado — usando localStorage. Verifique se firebase.js carregou.');
+  }
+
   const p = await storageGet('players');
   const d = await storageGet('drafts');
   const rawItems = p === null ? [] : p;
@@ -3256,7 +3314,7 @@ async function init(){
   setupNav(); setupSubtabs();
   setupJogadoresView(); setupNovoDraftView();
   setupDraftView(); setupTimesView();
-  setInterval(pollForUpdates, 4000);
+  setupRealtimeSync();
 }
 document.addEventListener('DOMContentLoaded', init);
 })();

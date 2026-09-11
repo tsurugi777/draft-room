@@ -1,0 +1,3259 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Sala de Draft</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap');
+
+:root{
+  --bg:#12161c;
+  --panel:#1a212b;
+  --panel-2:#212a36;
+  --line:#2b3542;
+  --text:#e9edf2;
+  --muted:#8b97a8;
+  --amber:#e8a33d;
+  --amber-dim:#5c481f;
+  --green:#3fa66c;
+  --red:#d9645a;
+  --blue:#4f7cff;
+  --coach:#b07d3a;
+  --coach-bg:rgba(176,125,58,0.12);
+  --radius-card:10px;
+  --radius-pill:999px;
+}
+
+*{box-sizing:border-box;}
+html,body{height:100%;}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font-family:'Inter',sans-serif;
+  font-size:14px;
+  line-height:1.5;
+}
+
+h1,h2,h3,.headline{
+  font-family:'Oswald',sans-serif;
+  font-weight:600;
+  letter-spacing:0.01em;
+  margin:0;
+}
+
+.app-shell{
+  display:grid;
+  grid-template-columns:230px 1fr;
+  min-height:100vh;
+}
+
+.sidebar{
+  background:var(--panel);
+  border-right:1px solid var(--line);
+  padding:22px 16px;
+  display:flex;
+  flex-direction:column;
+  gap:26px;
+}
+.brand{ display:flex; flex-direction:column; gap:2px; }
+.brand .num{ font-family:'Oswald',sans-serif; font-size:42px; font-weight:700; color:var(--amber); line-height:0.9; }
+.brand .label{ font-family:'Oswald',sans-serif; font-size:17px; color:var(--text); }
+.brand .sub{ color:var(--muted); font-size:12px; margin-top:4px; }
+.nav{ display:flex; flex-direction:column; gap:4px; }
+.nav-item{
+  display:flex; align-items:center; gap:10px;
+  padding:10px 12px; border-radius:8px;
+  color:var(--muted); cursor:pointer;
+  font-size:14px; font-weight:500;
+  border:1px solid transparent; user-select:none;
+}
+.nav-item:hover{background:var(--panel-2);color:var(--text);}
+.nav-item.active{ background:var(--panel-2); color:var(--text); border-color:var(--line); }
+.nav-item .dot{ width:7px;height:7px;border-radius:50%; background:var(--line); flex-shrink:0; }
+.nav-item.active .dot{ background:var(--amber); }
+.sidebar-foot{
+  margin-top:auto; color:var(--muted); font-size:11.5px;
+  border-top:1px solid var(--line); padding-top:14px;
+}
+
+.main{ padding:32px 40px 60px; max-width:1120px; }
+.view[hidden]{display:none;}
+
+.panel-header{ margin-bottom:22px; }
+.panel-header h2{ font-size:26px; }
+.panel-header p{ color:var(--muted); margin:6px 0 0; max-width:60ch; }
+
+.card{
+  background:var(--panel); border:1px solid var(--line);
+  border-radius:var(--radius-card); padding:20px; margin-bottom:20px;
+}
+.card.danger-zone{
+  border-color:#4a2a2a;
+  background:linear-gradient(180deg, rgba(217,100,90,0.04), transparent);
+}
+.card-title{
+  font-family:'Oswald',sans-serif; font-size:15px;
+  color:var(--muted); margin:0 0 14px;
+}
+.card.danger-zone .card-title{color:var(--red);}
+
+label{ display:block; font-size:12.5px; color:var(--muted); margin-bottom:6px; }
+input[type=text],input[type=number],input[type=url],select,textarea{
+  width:100%; background:var(--bg);
+  border:1px solid var(--line); color:var(--text);
+  padding:9px 11px; border-radius:7px;
+  font-size:14px; font-family:inherit;
+}
+input:focus,select:focus,textarea:focus,button:focus-visible{
+  outline:2px solid var(--amber); outline-offset:1px;
+}
+input[type=checkbox]{width:16px;height:16px;accent-color:var(--amber);}
+
+.field{margin-bottom:14px;}
+.form-grid{
+  display:grid; grid-template-columns:1.4fr 1fr; gap:14px 18px;
+}
+.form-grid .span2{grid-column:1 / -1;}
+.checkbox-row{ display:flex;align-items:center;gap:8px; color:var(--text);font-size:14px; }
+
+.btn{
+  border:1px solid var(--line); background:var(--panel-2);
+  color:var(--text); padding:9px 16px;
+  border-radius:7px; font-size:13.5px; font-weight:600;
+  cursor:pointer; font-family:'Inter',sans-serif;
+}
+.btn:hover{border-color:#3a4656;}
+.btn-primary{ background:var(--amber); border-color:var(--amber); color:#1a1200; }
+.btn-primary:hover{filter:brightness(1.06);}
+.btn-primary:disabled{
+  background:var(--amber-dim); border-color:var(--amber-dim);
+  color:#8a7a55; cursor:not-allowed;
+}
+.btn-ghost{background:transparent;}
+.btn-danger{color:var(--red);border-color:#4a2a2a;background:transparent;}
+.btn-danger:hover{background:rgba(217,100,90,0.12);border-color:var(--red);}
+.btn-sm{padding:5px 10px;font-size:12px;}
+.btn-row{display:flex;gap:10px;margin-top:6px;flex-wrap:wrap;}
+
+table{width:100%;border-collapse:collapse;}
+th,td{ text-align:left; padding:9px 8px; border-bottom:1px solid var(--line); font-size:13.5px; }
+th{color:var(--muted);font-weight:600;font-size:12px;}
+tr:last-child td{border-bottom:none;}
+
+.tag{
+  display:inline-block; padding:2px 9px;
+  border-radius:var(--radius-pill);
+  background:var(--panel-2); border:1px solid var(--line);
+  color:var(--text); font-size:12px;
+}
+.tag.any{ background:transparent; color:var(--muted); border-style:dashed; }
+.tag.coach{ background:var(--coach-bg); border-color:var(--coach); color:#e8c694; }
+
+.subtabs{
+  display:flex; gap:6px; margin-bottom:16px;
+  border-bottom:1px solid var(--line);
+}
+.subtab{
+  padding:8px 14px; font-size:13.5px; font-weight:600;
+  color:var(--muted); cursor:pointer;
+  border-bottom:2px solid transparent; user-select:none;
+  margin-bottom:-1px;
+}
+.subtab:hover{color:var(--text);}
+.subtab.active{ color:var(--amber); border-bottom-color:var(--amber); }
+.subtab .count{ color:var(--muted); font-weight:400; font-size:12px; margin-left:4px; }
+
+.subview[hidden]{display:none;}
+
+.table-toolbar{ display:flex;gap:10px;margin-bottom:14px; }
+.table-toolbar input,.table-toolbar select{width:auto;flex:1;}
+
+.empty-state{
+  color:var(--muted); text-align:center;
+  padding:40px 20px; border:1px dashed var(--line);
+  border-radius:var(--radius-card); font-size:14px;
+}
+.empty-state.small{ padding:20px 12px; font-size:12.5px; }
+
+.dyn-list{display:flex;flex-direction:column;gap:8px;}
+.dyn-row{display:grid;grid-template-columns:34px 1fr;gap:10px;align-items:center;}
+.dyn-row .idx{ color:var(--muted); font-family:'Oswald',sans-serif; font-size:14px; text-align:right; }
+
+.preset-grid{
+  display:grid; grid-template-columns:1fr 90px 1fr;
+  gap:10px; align-items:center;
+  padding:7px 0; border-bottom:1px solid var(--line);
+}
+.preset-grid:last-child{border-bottom:none;}
+.preset-grid .poslabel{
+  font-family:'Oswald',sans-serif; font-size:14px; color:var(--text);
+}
+.preset-summary{
+  display:flex; gap:14px; flex-wrap:wrap;
+  margin-top:12px; padding-top:12px;
+  border-top:1px solid var(--line);
+  font-size:13px; color:var(--muted); align-items:center;
+}
+.preset-summary b{color:var(--amber);font-family:'Oswald',sans-serif;}
+.preset-ok{color:var(--green) !important;}
+.preset-bad{color:var(--red) !important;}
+
+.rounds-summary-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill, minmax(180px, 1fr));
+  gap:8px;
+}
+.round-pattern{
+  background:var(--bg); border:1px solid var(--line);
+  border-radius:8px; padding:10px 12px;
+  display:flex; flex-direction:column; gap:6px;
+}
+.round-pattern .rp-head{
+  display:flex; justify-content:space-between; align-items:baseline;
+  font-size:12px; color:var(--muted);
+}
+.round-pattern .rp-head b{ color:var(--amber); font-family:'Oswald',sans-serif; font-size:13px; }
+.round-pattern .rp-slots{ display:flex; flex-wrap:wrap; gap:4px; }
+.round-pattern .rp-slots .tag{ font-size:11px; padding:1px 7px; }
+
+.rounds-detail-toggle{
+  margin-top:10px;
+  background:transparent; border:1px dashed var(--line);
+  color:var(--muted); padding:7px 12px;
+  border-radius:6px; font-size:12px;
+  cursor:pointer; font-family:inherit;
+}
+.rounds-detail-toggle:hover{ color:var(--text); border-color:#3a4656; }
+
+.rounds-detail{
+  margin-top:10px;
+  display:flex; flex-direction:column; gap:6px;
+  max-height:320px; overflow-y:auto;
+  padding:10px; background:var(--bg);
+  border-radius:8px; border:1px solid var(--line);
+}
+.rounds-detail[hidden]{display:none;}
+.round-row-mini{
+  display:grid; grid-template-columns:50px 1fr auto;
+  gap:10px; align-items:center;
+  padding:5px 8px; border-radius:5px;
+  font-size:12px;
+}
+.round-row-mini:hover{background:var(--panel-2);}
+.round-row-mini .rnum-mini{ color:var(--amber); font-family:'Oswald',sans-serif; }
+.round-row-mini .rslots-mini{ display:flex; flex-wrap:wrap; gap:4px; }
+.round-row-mini .rslots-mini .tag{ font-size:10.5px; padding:1px 6px; }
+.round-row-mini .rnote{ color:var(--muted); font-size:11px; }
+
+/* Draft ao vivo */
+.draft-actions{
+  display:flex; gap:10px; flex-wrap:wrap;
+  margin-bottom:16px; align-items:flex-end;
+}
+.draft-actions .spacer{flex:1;}
+
+.draft-progress{
+  display:flex; gap:16px; flex-wrap:wrap;
+  padding:12px 16px; background:var(--panel);
+  border:1px solid var(--line); border-radius:8px;
+  margin-bottom:16px; align-items:center;
+}
+.draft-progress .dp-item{
+  display:flex; flex-direction:column; min-width:80px;
+}
+.draft-progress .dp-label{
+  font-size:11px; color:var(--muted); text-transform:uppercase;
+  letter-spacing:0.05em;
+}
+.draft-progress .dp-value{
+  font-family:'Oswald',sans-serif; font-size:20px; color:var(--text);
+}
+.draft-progress .dp-value b{color:var(--amber);}
+.draft-progress .dp-value.full b{color:var(--green);}
+.draft-progress .dp-bar{ flex:1; min-width:140px; }
+.draft-progress .dp-bar-track{
+  width:100%; height:6px; background:var(--bg);
+  border-radius:3px; overflow:hidden;
+  border:1px solid var(--line);
+}
+.draft-progress .dp-bar-fill{
+  height:100%; background:var(--amber);
+  transition:width 0.3s;
+}
+.draft-progress .dp-bar-fill.full{background:var(--green);}
+
+.onclock{
+  display:flex; justify-content:space-between; align-items:center;
+  flex-wrap:wrap; gap:14px; margin-bottom:6px;
+}
+.onclock .team-name{
+  font-family:'Oswald',sans-serif; font-size:22px; color:var(--amber);
+}
+.onclock .meta{color:var(--muted);font-size:13px;}
+.need-badge{
+  background:var(--panel-2); border:1px solid var(--line);
+  border-radius:8px; padding:8px 12px;
+  font-size:13px; color:var(--text);
+}
+.need-badge b{color:var(--amber);}
+
+.team-progress{
+  font-family:'Oswald',sans-serif; font-size:14px; color:var(--muted);
+}
+.team-progress b{color:var(--amber);font-size:16px;}
+.team-progress.full b{color:var(--green);}
+
+.slots-wrap{
+  display:flex; flex-direction:column;
+  gap:14px; margin-top:12px;
+}
+.pick-slot{
+  border:1px solid var(--line); border-radius:8px;
+  padding:12px; background:var(--bg);
+}
+.pick-slot.filled{
+  border-color:var(--amber);
+  background:rgba(232,163,61,0.06);
+}
+.pick-slot.coach-slot{
+  border-color:var(--coach); background:var(--coach-bg);
+}
+.pick-slot.coach-slot.filled{ background:rgba(176,125,58,0.20); }
+.pick-slot-head{
+  display:flex; justify-content:space-between; align-items:center;
+  margin-bottom:10px; gap:10px; flex-wrap:wrap;
+}
+.pick-slot-label{
+  font-family:'Oswald',sans-serif; font-size:14px;
+  color:var(--text); display:flex; align-items:center;
+  gap:8px; flex-wrap:wrap;
+}
+.pick-slot-label .needpos{color:var(--amber);}
+.pick-slot.coach-slot .pick-slot-label .needpos{color:#e8c694;}
+.pick-slot-label .anyslot{color:var(--muted);font-style:italic;}
+.lock-badge{
+  display:inline-flex; align-items:center; gap:4px;
+  font-size:11px; font-family:'Inter',sans-serif; font-weight:500;
+  color:var(--amber); background:rgba(232,163,61,0.12);
+  border:1px solid var(--amber-dim);
+  padding:2px 8px; border-radius:var(--radius-pill);
+}
+.pick-slot.coach-slot .lock-badge{
+  color:#e8c694; background:var(--coach-bg);
+  border-color:var(--coach);
+}
+.pick-slot-chosen{
+  font-size:13px; color:var(--amber); font-weight:600;
+  display:flex; align-items:center; gap:8px;
+}
+.pick-slot.coach-slot .pick-slot-chosen{color:#e8c694;}
+.pick-slot-chosen .clear-btn{
+  background:transparent; border:1px solid var(--line);
+  color:var(--muted); border-radius:5px;
+  font-size:11px; padding:2px 7px;
+  cursor:pointer; font-family:inherit;
+}
+.pick-slot-chosen .clear-btn:hover{color:var(--red);border-color:var(--red);}
+
+.slot-filter-bar{
+  display:flex; gap:8px; margin-bottom:10px; align-items:center;
+}
+.slot-search{
+  flex:1; background:var(--panel);
+  border:1px solid var(--line); color:var(--text);
+  padding:6px 10px; border-radius:6px;
+  font-size:12.5px; font-family:inherit;
+}
+.slot-search:focus{outline:2px solid var(--amber);outline-offset:1px;}
+.slot-toggle-all{
+  background:transparent; border:1px solid var(--line);
+  color:var(--muted); border-radius:6px;
+  font-size:11.5px; padding:5px 10px;
+  cursor:pointer; font-family:inherit; white-space:nowrap;
+}
+.slot-toggle-all:hover{color:var(--text);border-color:#3a4656;}
+
+.pos-groups{ display:flex; flex-direction:column; gap:10px; }
+.pos-group{
+  border:1px solid var(--line); border-radius:7px;
+  overflow:hidden; background:var(--panel);
+}
+.pos-group-head{
+  display:flex; justify-content:space-between; align-items:center;
+  padding:7px 11px; background:var(--panel-2);
+  cursor:pointer; user-select:none; gap:8px;
+}
+.pos-group-head:hover{background:#28323f;}
+.pos-group-title{
+  font-family:'Oswald',sans-serif; font-size:12.5px;
+  color:var(--text); letter-spacing:0.03em;
+  display:flex; align-items:center; gap:8px;
+}
+.pos-group-title .caret{
+  color:var(--muted); font-size:11px;
+  width:10px; display:inline-block;
+  transition:transform 0.15s;
+}
+.pos-group.collapsed .caret{transform:rotate(-90deg);}
+.pos-group-title.coach{ color:#e8c694; }
+.pos-group-count{
+  font-size:11.5px; color:var(--muted);
+  font-family:'Inter',sans-serif; font-weight:400;
+}
+.pos-group-body{
+  padding:10px 11px; display:flex;
+  flex-wrap:wrap; gap:6px;
+}
+.pos-group.collapsed .pos-group-body{display:none;}
+
+.player-chip{
+  border:1px solid var(--line); background:var(--bg);
+  padding:8px 12px; border-radius:8px;
+  cursor:pointer; font-size:13.5px;
+  display:flex; gap:8px; align-items:center;
+  font-family:inherit; color:inherit;
+}
+.player-chip:hover{border-color:#3a4656;background:var(--panel-2);}
+.player-chip.selected{
+  border-color:var(--amber); background:rgba(232,163,61,0.18);
+}
+.player-chip.coach-chip.selected{
+  border-color:var(--coach); background:rgba(176,125,58,0.22);
+}
+.player-chip .pos{color:var(--muted);font-size:11.5px;}
+.player-chip.small{ padding:6px 10px; font-size:12.5px; }
+
+.board-wrap{overflow-x:auto;}
+.board-table{min-width:100%;}
+.board-table th{white-space:nowrap;}
+.board-cell{
+  min-width:130px; font-size:12.5px;
+  color:var(--text); vertical-align:top;
+}
+.board-cell.current{
+  background:rgba(232,163,61,0.10);
+  border-left:2px solid var(--amber);
+  border-right:2px solid var(--amber);
+}
+.board-cell .rp{color:var(--muted);}
+.board-cell .coach-line{
+  color:#e8c694; font-size:11.5px; margin-top:2px;
+}
+
+.status-badge{
+  font-size:11.5px; padding:2px 9px;
+  border-radius:var(--radius-pill);
+  border:1px solid var(--line);
+}
+.status-badge.andamento{color:var(--amber);border-color:var(--amber-dim);}
+.status-badge.finalizado{color:var(--green);border-color:#234a34;}
+
+.picks-log{
+  display:flex; flex-direction:column; gap:6px;
+  max-height:360px; overflow-y:auto;
+}
+.pick-log-item{
+  display:grid;
+  grid-template-columns: 60px 1fr auto;
+  gap:12px; align-items:center;
+  padding:8px 12px; background:var(--bg);
+  border:1px solid var(--line); border-radius:7px;
+  font-size:12.5px;
+}
+.pick-log-item .pl-round{
+  font-family:'Oswald',sans-serif; color:var(--amber);
+  font-size:13px;
+}
+.pick-log-item .pl-info{ display:flex; flex-direction:column; gap:2px; }
+.pick-log-item .pl-team{
+  font-family:'Oswald',sans-serif; font-size:12px;
+  color:var(--muted);
+}
+.pick-log-item .pl-players{ color:var(--text); font-size:12.5px; }
+.pick-log-item .pl-players .pl-coach{ color:#e8c694; }
+
+/* Tabs de time */
+.team-tabs{
+  display:flex; gap:6px; flex-wrap:wrap;
+  margin-bottom:16px; padding-bottom:10px;
+  border-bottom:1px solid var(--line);
+}
+.team-tab{
+  padding:7px 14px; border:1px solid var(--line);
+  background:var(--panel); color:var(--muted);
+  border-radius:var(--radius-pill);
+  font-size:13px; font-weight:600;
+  cursor:pointer; user-select:none;
+  font-family:'Inter',sans-serif;
+  display:flex; align-items:center; gap:8px;
+}
+.team-tab:hover{color:var(--text);border-color:#3a4656;}
+.team-tab.active{
+  background:var(--amber); color:#1a1200;
+  border-color:var(--amber);
+}
+.team-tab .tab-avatar{
+  width:22px;height:22px; border-radius:50%;
+  background:var(--panel-2); border:1px solid var(--line);
+  overflow:hidden; display:flex;
+  align-items:center; justify-content:center;
+  font-size:9px; font-weight:700;
+  color:var(--amber); font-family:'Oswald',sans-serif;
+  flex-shrink:0;
+}
+.team-tab.active .tab-avatar{
+  background:rgba(0,0,0,0.2); border-color:rgba(0,0,0,0.3);
+  color:#1a1200;
+}
+.team-tab .tab-count{
+  font-size:11px; color:inherit;
+  opacity:0.7; font-weight:400;
+}
+.team-panel[hidden]{display:none;}
+
+/* Campo tático */
+.pitch-layout{
+  display:grid; grid-template-columns: 420px 1fr;
+  gap:20px; align-items:start;
+}
+@media (max-width:1040px){ .pitch-layout{grid-template-columns:1fr;} }
+
+.pitch-col{ display:flex; flex-direction:column; gap:10px; }
+.pitch-toolbar{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+.pitch-toolbar label{ margin:0; font-size:12px; }
+.pitch-toolbar select{ width:auto; padding:5px 9px; font-size:12.5px; }
+.pitch-hint{ color:var(--muted); font-size:11.5px; margin:0; }
+
+.pitch{
+  position:relative; width:100%; max-width:420px;
+  padding-bottom:154%; border-radius:10px;
+  border:2px solid rgba(255,255,255,0.5);
+  overflow:hidden;
+  background:repeating-linear-gradient(
+    to bottom, #2f8f4e 0, #2f8f4e 8.33%,
+    #2a8248 8.33%, #2a8248 16.66%
+  );
+  touch-action:none;
+  user-select:none;
+}
+.pl-halfway{position:absolute;left:4%;right:4%;top:50%;height:2px;background:rgba(255,255,255,.55);}
+.pl-circle{position:absolute;left:50%;top:50%;width:30%;aspect-ratio:1;border:2px solid rgba(255,255,255,.55);border-radius:50%;transform:translate(-50%,-50%);}
+.pl-spot{position:absolute;width:6px;height:6px;background:rgba(255,255,255,.6);border-radius:50%;transform:translate(-50%,-50%);}
+.pl-box-top{position:absolute;top:0;left:20%;width:60%;height:16%;border:2px solid rgba(255,255,255,.55);border-top:none;}
+.pl-box-bottom{position:absolute;bottom:0;left:20%;width:60%;height:16%;border:2px solid rgba(255,255,255,.55);border-bottom:none;}
+.pl-goalarea-top{position:absolute;top:0;left:37%;width:26%;height:6%;border:2px solid rgba(255,255,255,.55);border-top:none;}
+.pl-goalarea-bottom{position:absolute;bottom:0;left:37%;width:26%;height:6%;border:2px solid rgba(255,255,255,.55);border-bottom:none;}
+
+/* Token: foto circular + nome abaixo */
+.pitch-token{
+  position:absolute;
+  transform:translate(-50%,-50%);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:4px;
+  cursor:grab;
+  user-select:none;
+  touch-action:none;
+  z-index:3;
+  transition:left 0.15s ease-out, top 0.15s ease-out;
+}
+.pitch-token.dragging{
+  cursor:grabbing;
+  z-index:10;
+  transition:none;
+  filter:drop-shadow(0 4px 12px rgba(0,0,0,0.6));
+}
+.pitch-token.selected .token-avatar{
+  box-shadow:0 0 0 3px rgba(255,255,255,0.9), 0 0 0 6px rgba(232,163,61,0.5);
+}
+
+/* O avatar é o círculo: contém a foto ou as iniciais */
+.pitch-token .token-avatar{
+  width:56px;
+  height:56px;
+  border-radius:50%;
+  border:2px solid var(--amber);
+  background:var(--panel-2);
+  overflow:hidden;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex-shrink:0;
+  box-shadow:0 2px 6px rgba(0,0,0,0.5);
+  transition:box-shadow 0.12s, border-color 0.12s, transform 0.12s;
+  position:relative;
+}
+.pitch-token:hover .token-avatar{
+  border-color:#fff;
+  transform:scale(1.05);
+}
+
+/* A FOTO ocupa todo o círculo */
+.pitch-token .token-avatar .token-photo{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  display:block;
+  border-radius:50%;
+  pointer-events:none;
+  z-index:2;
+}
+
+/* Iniciais: ficam atrás da foto (fallback). Se a foto falhar, aparecem */
+.pitch-token .token-avatar .token-initials{
+  position:relative;
+  z-index:1;
+  font-family:'Oswald',sans-serif;
+  font-size:18px;
+  font-weight:700;
+  color:var(--amber);
+  pointer-events:none;
+  line-height:1;
+}
+
+/* Se não tem foto, mostra só as iniciais em destaque */
+.pitch-token.no-photo .token-avatar{
+  background:var(--panel-2);
+}
+
+/* Borda de treinador */
+.pitch-token.coach-token .token-avatar{
+  border-color:var(--coach);
+}
+.pitch-token.coach-token .token-initials{ color:#e8c694; }
+
+/* Nome abaixo da foto */
+.pitch-token .token-name{
+  font-size:10.5px;
+  color:#fff;
+  background:rgba(10,14,18,0.85);
+  padding:2px 8px;
+  border-radius:10px;
+  max-width:84px;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  text-align:center;
+  font-weight:500;
+  pointer-events:none;
+  box-shadow:0 1px 3px rgba(0,0,0,0.4);
+}
+
+/* Botão de remover (hover) */
+.pitch-token .token-remove{
+  position:absolute;
+  top:-4px; right:-4px;
+  width:18px; height:18px;
+  border-radius:50%;
+  background:var(--red);
+  color:#fff;
+  border:2px solid var(--bg);
+  font-size:11px;
+  line-height:1;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  font-family:inherit;
+  padding:0;
+  font-weight:700;
+  z-index:5;
+}
+.pitch-token:hover .token-remove{
+  display:flex;
+}
+.pitch-token.dragging .token-remove{
+  display:none;
+}
+
+/* Banco lateral */
+.bench{
+  background:var(--panel); border:1px solid var(--line);
+  border-radius:8px; padding:12px;
+  display:flex; flex-direction:column; gap:10px;
+}
+.bench-head{
+  display:flex; justify-content:space-between;
+  align-items:baseline; gap:8px;
+}
+.bench-head h4{
+  font-family:'Oswald',sans-serif; font-size:13px;
+  color:var(--text); margin:0;
+}
+.bench-head .bench-count{ color:var(--muted); font-size:11.5px; }
+.bench-list{
+  display:grid;
+  grid-template-columns:repeat(auto-fill, minmax(150px, 1fr));
+  gap:6px; max-height:640px; overflow-y:auto;
+}
+.bench-item{
+  display:flex; align-items:center; gap:8px;
+  padding:6px 9px; border:1px solid var(--line);
+  border-radius:6px; background:var(--bg);
+  cursor:pointer; font-size:12.5px;
+  font-family:inherit; color:inherit; text-align:left;
+}
+.bench-item:hover{border-color:#3a4656;background:var(--panel-2);}
+.bench-item .b-name{
+  overflow:hidden; text-overflow:ellipsis;
+  white-space:nowrap; flex:1;
+}
+.bench-item .b-pos{ color:var(--muted); font-size:11px; flex-shrink:0; }
+.bench-empty{
+  color:var(--muted); font-size:11.5px;
+  text-align:center; padding:14px 4px;
+  border:1px dashed var(--line); border-radius:6px;
+}
+
+/* Formação detectada */
+.formation-info{
+  display:flex; gap:8px; align-items:center;
+  padding:8px 12px; background:var(--panel-2);
+  border:1px solid var(--line); border-radius:6px;
+  font-size:12.5px;
+}
+.formation-info .fi-label{
+  color:var(--muted); font-family:'Inter',sans-serif;
+}
+.formation-info .fi-value{
+  font-family:'Oswald',sans-serif;
+  color:var(--amber);
+  font-size:14px;
+}
+
+/* Avatar / Foto */
+.avatar{
+  display:inline-flex; align-items:center; justify-content:center;
+  width:32px; height:32px; border-radius:50%;
+  background:var(--panel-2); color:var(--amber);
+  font-family:'Oswald',sans-serif; font-size:11px;
+  font-weight:700; flex-shrink:0;
+  border:1px solid var(--line);
+  overflow:hidden; position:relative;
+}
+.avatar img{ width:100%; height:100%; object-fit:cover; display:block; }
+.avatar.small{ width:22px;height:22px; font-size:9px; }
+.name-cell{ display:flex; align-items:center; gap:10px; }
+
+.chip-photo{
+  display:inline-block; width:20px;height:20px;
+  border-radius:50%; object-fit:cover;
+  flex-shrink:0; border:1px solid var(--line);
+  vertical-align:middle;
+}
+.chip-photo-placeholder{
+  display:inline-flex; align-items:center; justify-content:center;
+  width:20px;height:20px; border-radius:50%;
+  background:var(--panel-2); border:1px solid var(--line);
+  color:var(--muted); font-size:9px;
+  font-family:'Oswald',sans-serif; font-weight:700;
+  flex-shrink:0;
+}
+
+/* Modal foto */
+.photo-search-input{ display:flex; gap:8px; margin-bottom:12px; }
+.photo-search-input input{flex:1;}
+.photo-search-status{ color:var(--muted); font-size:12.5px; margin-bottom:12px; }
+.photo-results{
+  display:grid;
+  grid-template-columns:repeat(auto-fill, minmax(140px, 1fr));
+  gap:10px; max-height:400px; overflow-y:auto;
+  margin-bottom:14px;
+}
+.photo-card{
+  border:1px solid var(--line); border-radius:8px;
+  padding:10px; background:var(--bg); cursor:pointer;
+  display:flex; flex-direction:column;
+  align-items:center; gap:8px;
+  text-align:center;
+  transition:border-color 0.12s, background 0.12s;
+}
+.photo-card:hover{ border-color:var(--amber); background:var(--panel-2); }
+.photo-card img{
+  width:64px;height:64px; border-radius:50%;
+  object-fit:cover; background:var(--panel-2);
+  border:2px solid var(--line);
+}
+.photo-card .pc-name{
+  font-size:12.5px; font-weight:600; color:var(--text);
+  overflow:hidden; text-overflow:ellipsis;
+  white-space:nowrap; max-width:120px;
+}
+.photo-card .pc-meta{ font-size:10.5px; color:var(--muted); }
+
+.modal-backdrop{
+  position:fixed; inset:0; background:rgba(0,0,0,0.65);
+  z-index:100; display:flex; align-items:center;
+  justify-content:center; padding:20px;
+}
+.modal{
+  background:var(--panel); border:1px solid var(--line);
+  border-radius:var(--radius-card); padding:22px;
+  max-width:720px; width:100%; max-height:90vh;
+  overflow-y:auto;
+}
+.modal h3{ font-family:'Oswald',sans-serif; font-size:18px; margin:0 0 10px; }
+.modal p{ color:var(--muted); font-size:13px; margin:0 0 14px; }
+.csv-preview{
+  background:var(--bg); border:1px solid var(--line);
+  border-radius:7px; padding:10px 12px;
+  max-height:220px; overflow:auto;
+  font-family:monospace; font-size:12px;
+  color:var(--muted); white-space:pre;
+  margin-bottom:14px;
+}
+.csv-detected{
+  display:flex; gap:14px; flex-wrap:wrap;
+  font-size:12.5px; color:var(--muted);
+  margin-bottom:14px; padding:10px 12px;
+  background:var(--panel-2); border-radius:7px;
+}
+.csv-detected b{ color:var(--amber); font-family:'Oswald',sans-serif; }
+.csv-detected .coach-b{ color:#e8c694; }
+
+.json-box{
+  width:100%; min-height:200px;
+  background:var(--bg); border:1px solid var(--line);
+  color:var(--text); padding:10px 12px;
+  border-radius:7px; font-family:monospace;
+  font-size:12px; resize:vertical;
+}
+
+.coach-box{
+  display:flex; align-items:center; gap:10px;
+  background:var(--coach-bg); border:1px solid var(--coach);
+  border-radius:8px; padding:10px 12px;
+  margin-top:10px; font-size:13px;
+}
+.coach-box .coach-label{
+  color:#e8c694; font-family:'Oswald',sans-serif;
+  font-size:12.5px; flex-shrink:0;
+}
+.coach-box .coach-name{ color:#e8c694; font-weight:600; }
+.coach-box .coach-name.empty{
+  color:var(--muted); font-weight:400; font-style:italic;
+}
+
+@media (max-width:820px){
+  .app-shell{grid-template-columns:1fr;}
+  .sidebar{ flex-direction:row; align-items:center; padding:14px 16px; overflow-x:auto; }
+  .brand{display:none;}
+  .nav{flex-direction:row;}
+  .sidebar-foot{display:none;}
+  .main{padding:22px 18px 50px;}
+  .form-grid{grid-template-columns:1fr;}
+  .preset-grid{grid-template-columns:1fr 70px;}
+}
+</style>
+</head>
+<body>
+
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="brand">
+      <span class="num">01</span>
+      <span class="label">SALA DE DRAFT</span>
+      <span class="sub">sua base, suas regras</span>
+    </div>
+    <nav class="nav">
+      <div class="nav-item active" data-tab="jogadores"><span class="dot"></span>Jogadores</div>
+      <div class="nav-item" data-tab="novo"><span class="dot"></span>Novo draft</div>
+      <div class="nav-item" data-tab="draft"><span class="dot"></span>Draft ao vivo</div>
+      <div class="nav-item" data-tab="times"><span class="dot"></span>Times</div>
+    </nav>
+    <div class="sidebar-foot">Dados compartilhados: visíveis para todos que abrirem este app. Atualiza a cada poucos segundos.</div>
+  </aside>
+
+  <main class="main">
+
+    <!-- JOGADORES -->
+    <section class="view" id="view-jogadores">
+      <div class="panel-header">
+        <h2>Jogadores e treinadores</h2>
+        <p>Cadastre seu banco de jogadores e treinadores. Posição é texto livre — use os nomes que fizerem sentido para o seu draft. Você também pode importar um CSV e buscar fotos no Sofascore.</p>
+      </div>
+
+      <div class="subtabs">
+        <div class="subtab active" data-subtab="players">Jogadores <span class="count" id="subtab-count-players"></span></div>
+        <div class="subtab" data-subtab="coaches">Treinadores <span class="count" id="subtab-count-coaches"></span></div>
+      </div>
+
+      <div class="subview" id="subview-players">
+        <div class="card">
+          <div class="card-title">Adicionar / editar jogador</div>
+          <form id="player-form">
+            <div class="form-grid">
+              <div class="field">
+                <label for="pf-nome">Nome</label>
+                <input type="text" id="pf-nome" required>
+              </div>
+              <div class="field">
+                <label for="pf-pos">Posição</label>
+                <input type="text" id="pf-pos" list="pos-list" required>
+                <datalist id="pos-list"></datalist>
+              </div>
+              <div class="field span2">
+                <label for="pf-obs">Observações (opcional)</label>
+                <textarea id="pf-obs" rows="2"></textarea>
+              </div>
+              <div class="field span2">
+                <label for="pf-photo">Foto (URL, opcional)</label>
+                <div class="photo-search-input">
+                  <input type="url" id="pf-photo" placeholder="https://... ou use o botão ao lado">
+                  <button type="button" class="btn" id="pf-photo-btn">Buscar no Sofascore</button>
+                </div>
+              </div>
+            </div>
+            <div class="btn-row">
+              <button type="submit" class="btn btn-primary" id="pf-submit">Adicionar jogador</button>
+              <button type="button" class="btn btn-ghost" id="pf-cancel" hidden>Cancelar edição</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Banco de jogadores <span id="players-count" style="color:var(--muted);font-weight:400;"></span></div>
+          <div class="table-toolbar">
+            <input type="text" id="pt-search" placeholder="Buscar por nome...">
+            <select id="pt-filter"><option value="">Todas as posições</option></select>
+          </div>
+          <div id="players-table-wrap"></div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Fotos em lote</div>
+          <p style="color:var(--muted);margin:0 0 12px;font-size:12.5px;">
+            Busca fotos de todos os jogadores e treinadores no Sofascore. Só aplica a foto quando há uma correspondência confiável de nome.
+          </p>
+          <div class="btn-row">
+            <button type="button" class="btn" id="bulk-photo-btn">Buscar fotos para todos</button>
+            <button type="button" class="btn btn-ghost" id="bulk-photo-missing-btn">Buscar fotos apenas para quem não tem</button>
+          </div>
+          <div id="bulk-photo-status" style="color:var(--muted);font-size:12.5px;margin-top:10px;"></div>
+        </div>
+      </div>
+
+      <div class="subview" id="subview-coaches" hidden>
+        <div class="card">
+          <div class="card-title">Adicionar / editar treinador</div>
+          <form id="coach-form">
+            <div class="form-grid">
+              <div class="field">
+                <label for="cf-nome">Nome</label>
+                <input type="text" id="cf-nome" required>
+              </div>
+              <div class="field">
+                <label for="cf-obs">Observações (opcional)</label>
+                <input type="text" id="cf-obs">
+              </div>
+              <div class="field span2">
+                <label for="cf-photo">Foto (URL, opcional)</label>
+                <div class="photo-search-input">
+                  <input type="url" id="cf-photo" placeholder="https://... ou use o botão ao lado">
+                  <button type="button" class="btn" id="cf-photo-btn">Buscar no Sofascore</button>
+                </div>
+              </div>
+            </div>
+            <div class="btn-row">
+              <button type="submit" class="btn btn-primary" id="cf-submit">Adicionar treinador</button>
+              <button type="button" class="btn btn-ghost" id="cf-cancel" hidden>Cancelar edição</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Banco de treinadores <span id="coaches-count" style="color:var(--muted);font-weight:400;"></span></div>
+          <div class="table-toolbar">
+            <input type="text" id="ct-search" placeholder="Buscar por nome...">
+          </div>
+          <div id="coaches-table-wrap"></div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:20px;">
+        <div class="card-title">Importar CSV</div>
+        <p style="color:var(--muted);margin:0 0 12px;font-size:12.5px;">
+          Envie um arquivo <b>.csv</b>. Dois formatos são aceitos automaticamente:<br>
+          • <b>Colunas = posições</b> (recomendado): a 1ª linha tem o nome de cada posição, e cada célula abaixo é um jogador daquela posição.<br>
+          • <b>Linha = jogador</b>: cada linha tem <code>nome,posição</code> (com cabeçalho opcional).<br>
+          Você também pode <b>colar o conteúdo do CSV</b> diretamente na caixa de texto abaixo.
+        </p>
+
+        <div class="btn-row" style="margin-bottom:10px;">
+          <button type="button" class="btn btn-primary" id="csv-import-btn">Escolher arquivo CSV…</button>
+          <input type="file" id="csv-file-input" accept=".csv,text/csv,text/plain" style="display:none;">
+        </div>
+
+        <div class="field">
+          <label for="csv-paste">Ou cole o conteúdo CSV aqui:</label>
+          <textarea id="csv-paste" class="json-box" placeholder="Cole aqui o conteúdo do arquivo .csv"></textarea>
+        </div>
+        <div class="btn-row">
+          <button type="button" class="btn" id="csv-parse-pasted">Processar CSV colado</button>
+        </div>
+
+        <div id="csv-status" style="color:var(--muted);font-size:12.5px;margin-top:10px;"></div>
+      </div>
+    </section>
+
+    <!-- NOVO DRAFT -->
+    <section class="view" id="view-novo" hidden>
+      <div class="panel-header">
+        <h2>Novo draft</h2>
+        <p>Configure times, elenco, picks por rodada e o modelo de posições. O app gera as rodadas automaticamente.</p>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Configuração geral</div>
+        <div class="form-grid">
+          <div class="field span2">
+            <label for="nd-nome">Nome do draft</label>
+            <input type="text" id="nd-nome" placeholder="Ex.: Draft Carrara Liga">
+          </div>
+          <div class="field">
+            <label for="nd-times">Quantidade de times</label>
+            <input type="number" id="nd-times" min="2" max="40" value="8">
+          </div>
+          <div class="field">
+            <label for="nd-elenco">Jogadores por time</label>
+            <input type="number" id="nd-elenco" min="1" max="60" value="23">
+          </div>
+          <div class="field">
+            <label for="nd-picks-por-rodada">Picks por rodada (por time)</label>
+            <input type="number" id="nd-picks-por-rodada" min="1" max="30" value="1">
+          </div>
+          <div class="field">
+            <label for="nd-coaches">Treinadores por time</label>
+            <input type="number" id="nd-coaches" min="0" max="5" value="1">
+          </div>
+          <div class="field span2 checkbox-row">
+            <input type="checkbox" id="nd-snake" checked>
+            <label for="nd-snake" style="margin:0;color:var(--text);">Ordem serpentina (inverte a ordem a cada rodada)</label>
+          </div>
+        </div>
+        <div id="nd-general-info" style="color:var(--muted);font-size:12.5px;margin-top:6px;"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Nomes dos times</div>
+        <div class="dyn-list" id="teams-config-list"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Modelo de posições (por time, no elenco inteiro)</div>
+        <p style="color:var(--muted);margin:0 0 14px;font-size:12.5px;">
+          Informe quantos jogadores de cada posição cada time deve ter no total do elenco.
+          O app distribui essas posições entre as rodadas automaticamente.
+        </p>
+        <div id="preset-positions-list"></div>
+        <div class="preset-summary" id="preset-summary"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Pré-visualização das rodadas</div>
+        <div id="rounds-preview-list"></div>
+      </div>
+
+      <div class="btn-row" style="margin-top:20px;">
+        <button type="button" class="btn btn-primary" id="nd-criar">Criar draft</button>
+        <button type="button" class="btn btn-ghost" id="nd-limpar">Limpar formulário</button>
+      </div>
+    </section>
+
+    <!-- DRAFT AO VIVO -->
+    <section class="view" id="view-draft" hidden>
+      <div class="panel-header">
+        <h2>Draft ao vivo</h2>
+        <p>Acompanhe de quem é a vez, escolha os jogadores por posição e confirme.</p>
+      </div>
+
+      <div class="draft-actions">
+        <div style="min-width:280px;">
+          <label for="dr-select" style="margin-bottom:4px;">Draft</label>
+          <select id="dr-select"></select>
+        </div>
+        <div class="spacer"></div>
+        <button type="button" class="btn" id="dr-export">Exportar</button>
+        <button type="button" class="btn" id="dr-import">Importar arquivo</button>
+        <button type="button" class="btn" id="dr-import-paste">Colar JSON</button>
+        <input type="file" id="dr-import-file" accept=".json,application/json,text/plain" style="display:none;">
+      </div>
+
+      <div id="draft-live-body"></div>
+    </section>
+
+    <!-- TIMES -->
+    <section class="view" id="view-times" hidden>
+      <div class="panel-header">
+        <h2>Times</h2>
+        <p>Escolha um time, defina a formação e arraste os jogadores livremente pelo campo.</p>
+      </div>
+      <div class="field" style="max-width:340px;">
+        <label for="tm-select">Draft</label>
+        <select id="tm-select"></select>
+      </div>
+      <div id="times-body"></div>
+    </section>
+
+  </main>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/* ==================== FORMAÇÕES ==================== */
+const FORMATIONS = {
+  '4-4-2':   [{role:'GOL',count:1},{role:'DEF',count:4},{role:'MEI',count:4},{role:'ATA',count:2}],
+  '4-3-3':   [{role:'GOL',count:1},{role:'DEF',count:4},{role:'MEI',count:3},{role:'ATA',count:3}],
+  '4-3-2-1': [{role:'GOL',count:1},{role:'DEF',count:4},{role:'MEI',count:3},{role:'MEI',count:2},{role:'ATA',count:1}],
+  '4-3-1-2': [{role:'GOL',count:1},{role:'DEF',count:4},{role:'MEI',count:3},{role:'MEI',count:1},{role:'ATA',count:2}],
+  '4-2-3-1': [{role:'GOL',count:1},{role:'DEF',count:4},{role:'MEI',count:2},{role:'MEI',count:3},{role:'ATA',count:1}],
+  '4-1-4-1': [{role:'GOL',count:1},{role:'DEF',count:4},{role:'MEI',count:1},{role:'MEI',count:4},{role:'ATA',count:1}],
+  '4-1-2-3': [{role:'GOL',count:1},{role:'DEF',count:4},{role:'MEI',count:1},{role:'MEI',count:2},{role:'ATA',count:3}],
+  '3-4-3':   [{role:'GOL',count:1},{role:'DEF',count:3},{role:'MEI',count:4},{role:'ATA',count:3}],
+  '3-2-4-1': [{role:'GOL',count:1},{role:'DEF',count:3},{role:'MEI',count:2},{role:'MEI',count:4},{role:'ATA',count:1}],
+  '3-2-3-2': [{role:'GOL',count:1},{role:'DEF',count:3},{role:'MEI',count:2},{role:'MEI',count:3},{role:'ATA',count:2}],
+  '3-1-4-2': [{role:'GOL',count:1},{role:'DEF',count:3},{role:'MEI',count:1},{role:'MEI',count:4},{role:'ATA',count:2}],
+  '5-3-2':   [{role:'GOL',count:1},{role:'DEF',count:5},{role:'MEI',count:3},{role:'ATA',count:2}],
+  '5-2-2-1': [{role:'GOL',count:1},{role:'DEF',count:5},{role:'MEI',count:2},{role:'MEI',count:2},{role:'ATA',count:1}],
+  '5-2-1-2': [{role:'GOL',count:1},{role:'DEF',count:5},{role:'MEI',count:2},{role:'MEI',count:1},{role:'ATA',count:2}]
+};
+
+function buildFormationSlots(formationName){
+  const lines = FORMATIONS[formationName];
+  if(!lines) return [];
+  const N = lines.length;
+  const golY = 92;
+  const topY = 14;
+  function yForLine(i){
+    if(i === 0) return golY;
+    if(N <= 2) return topY;
+    const t = (i - 1) / (N - 2);
+    return topY + (1 - t) * (golY - topY - 20);
+  }
+  const slots = [];
+  lines.forEach((line, i)=>{
+    const y = yForLine(i);
+    const count = line.count;
+    const marginX = 14;
+    const spanX = 100 - marginX * 2;
+    for(let j=0;j<count;j++){
+      let x;
+      if(count === 1) x = 50;
+      else {
+        const step = spanX / (count - 1);
+        x = marginX + step * j;
+      }
+      slots.push({ role: line.role, lineIndex: i, idxInLine: j, x, y });
+    }
+  });
+  return slots;
+}
+
+function detectFormationFromPositions(positions){
+  if(!positions || positions.length === 0) return { name: 'personalizada', distance: Infinity };
+  let best = { name: 'personalizada', distance: Infinity };
+  for(const [name, lines] of Object.entries(FORMATIONS)){
+    const slots = buildFormationSlots(name);
+    if(slots.length !== positions.length) continue;
+    const a = positions.slice().sort((p1,p2)=> (p1.y - p2.y) || (p1.x - p2.x));
+    const b = slots.slice().sort((p1,p2)=> (p1.y - p2.y) || (p1.x - p2.x));
+    let dist = 0;
+    for(let i=0;i<a.length;i++){
+      const dx = a[i].x - b[i].x;
+      const dy = a[i].y - b[i].y;
+      dist += Math.sqrt(dx*dx + dy*dy);
+    }
+    if(dist < best.distance) best = { name, distance: dist };
+  }
+  const avg = best.distance / positions.length;
+  if(avg > 12) return { name: 'personalizada', distance: avg };
+  return { name: best.name, distance: avg };
+}
+
+/* ==================== ESTADO ==================== */
+let items = [];
+let drafts = [];
+let editingPlayerId = null;
+let editingCoachId = null;
+let currentDraftId = null;
+let currentTimesDraftId = null;
+let currentTimesTeamIndex = 0;
+let selectedSlots = [];
+let slotSearchTerms = [];
+let collapsedGroups = {};
+let currentTab = 'jogadores';
+let currentSubtab = 'players';
+const SHARED = true;
+
+let pitchEditState = { teamIndex: null, selectedPlayerId: null };
+
+let pendingWrites = 0;
+let lastLocalWriteAt = 0;
+const SYNC_COOLDOWN_MS = 3000;
+let dirtyLocal = false;
+let presetModel = [];
+let showRoundsDetail = false;
+let isDraggingToken = false;
+
+function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,8); }
+function isPlayer(it){ return (it.type || 'player') === 'player'; }
+function isCoach(it){ return it.type === 'coach'; }
+function playersOnly(){ return items.filter(isPlayer); }
+function coachesOnly(){ return items.filter(isCoach); }
+function isCoachColumn(header){
+  const h = String(header||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim().toLowerCase();
+  if(!h) return false;
+  return h === 'treinador' || h === 'treinadores' ||
+         h === 'coach' || h === 'coaches' ||
+         h === 'tecnico' || h === 'tecnicos' ||
+         h === 'manager' || h === 'managers' ||
+         h === 'head coach';
+}
+
+/* ==================== STORAGE ==================== */
+const hasNativeStorage = !!(window.storage && typeof window.storage.get === 'function' && typeof window.storage.set === 'function');
+
+async function storageGet(key){
+  if(hasNativeStorage){
+    try{
+      const res = await window.storage.get(key, SHARED);
+      if(!res || res.value === undefined || res.value === null) return null;
+      return JSON.parse(res.value);
+    }catch(e){ console.error('storage.get falhou', key, e); return null; }
+  }
+  try{
+    const raw = localStorage.getItem('draftapp_' + key);
+    if(raw === null) return null;
+    return JSON.parse(raw);
+  }catch(e){ console.error('localStorage.get falhou', key, e); return null; }
+}
+
+async function storageSet(key, value){
+  pendingWrites++;
+  try{
+    const serialized = JSON.stringify(value);
+    if(hasNativeStorage){
+      await window.storage.set(key, serialized, SHARED);
+    } else {
+      localStorage.setItem('draftapp_' + key, serialized);
+    }
+  }catch(e){ console.error('Falha ao salvar', key, e); throw e; }
+  finally{ pendingWrites--; lastLocalWriteAt = Date.now(); }
+}
+
+async function saveItems(){
+  dirtyLocal = true;
+  try{ await storageSet('players', items); dirtyLocal = false; }catch(e){}
+}
+async function saveDrafts(){
+  dirtyLocal = true;
+  try{ await storageSet('drafts', drafts); dirtyLocal = false; }catch(e){}
+}
+
+/* ==================== SOFASCORE ==================== */
+const SOFA_SEARCH_URL = 'https://api.sofascore.com/api/v1/search/all';
+const SOFA_IMG_PLAYER = id => `https://api.sofascore.app/api/v1/player/${id}/image`;
+const SOFA_IMG_TEAM   = id => `https://api.sofascore.app/api/v1/team/${id}/image`;
+const SOFA_IMG_MANAGER = id => `https://api.sofascore.app/api/v1/manager/${id}/image`;
+
+function searchCacheKey(q){ return 'sofa_search_v2_' + q.trim().toLowerCase().replace(/\s+/g,'_').slice(0,60); }
+function getSearchCache(q){
+  try{ const raw = sessionStorage.getItem(searchCacheKey(q)); return raw ? JSON.parse(raw) : null; }
+  catch(e){ return null; }
+}
+function setSearchCache(q, data){
+  try{ sessionStorage.setItem(searchCacheKey(q), JSON.stringify(data)); }catch(e){}
+}
+
+async function searchSofascore(query){
+  if(!query || !query.trim()) return [];
+  const cached = getSearchCache(query);
+  if(cached) return cached;
+  const url = `${SOFA_SEARCH_URL}?q=${encodeURIComponent(query)}`;
+  try{
+    const res = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    const results = (data.results || []).map(r=>{
+      const ent = r.entity || {};
+      const type = r.type;
+      let id = ent.id, name = ent.name || ent.shortName || '', imgUrl = null, meta = '';
+      if(type === 'player'){ imgUrl = SOFA_IMG_PLAYER(id); meta = ent.team?.name || ent.position || ''; }
+      else if(type === 'team'){ imgUrl = SOFA_IMG_TEAM(id); meta = 'Time'; }
+      else if(type === 'manager'){ imgUrl = SOFA_IMG_MANAGER(id); meta = 'Treinador'; }
+      else return null;
+      return { type, id, name, photoUrl: imgUrl, meta };
+    }).filter(Boolean);
+    setSearchCache(query, results);
+    return results;
+  }catch(e){
+    console.warn('Busca Sofascore falhou:', e);
+    return { error: e.message || String(e) };
+  }
+}
+
+function normName(s){
+  return String(s||'')
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .toLowerCase().replace(/[.\-_'’]/g, ' ').replace(/\s+/g, ' ').trim();
+}
+function levenshtein(a, b){
+  if(a === b) return 0;
+  if(!a) return b.length;
+  if(!b) return a.length;
+  const m = a.length, n = b.length;
+  let prev = new Array(n+1);
+  for(let j=0;j<=n;j++) prev[j] = j;
+  for(let i=1;i<=m;i++){
+    const cur = new Array(n+1);
+    cur[0] = i;
+    for(let j=1;j<=n;j++){
+      const cost = a[i-1] === b[j-1] ? 0 : 1;
+      cur[j] = Math.min(prev[j]+1, cur[j-1]+1, prev[j-1]+cost);
+    }
+    prev = cur;
+  }
+  return prev[n];
+}
+function nameScore(query, candidate){
+  const q = normName(query), c = normName(candidate);
+  if(!q || !c) return 0;
+  if(q === c) return 100;
+  const qWords = q.split(' '), cWords = c.split(' ');
+  if(cWords.every(w => qWords.includes(w))) return 95;
+  if(qWords.every(w => cWords.includes(w))) return 95;
+  const dist = levenshtein(q, c);
+  const maxLen = Math.max(q.length, c.length);
+  const sim = 1 - dist / maxLen;
+  let score = Math.round(sim * 85);
+  const qLast = qWords[qWords.length-1], cLast = cWords[cWords.length-1];
+  if(qLast && cLast && qLast === cLast) score += 8;
+  if(qWords[0] && cWords[0] && qWords[0] === cWords[0]) score += 5;
+  return Math.min(100, Math.max(0, score));
+}
+function pickBestMatch(query, results, wantType, minScore){
+  if(!Array.isArray(results) || results.length === 0) return null;
+  const min = typeof minScore === 'number' ? minScore : 60;
+  let pool = results;
+  if(wantType){
+    pool = results.filter(r => r.type === wantType);
+    if(pool.length === 0) return null;
+  }
+  let best = null, bestScore = -1;
+  for(const r of pool){
+    const s = nameScore(query, r.name);
+    if(s > bestScore){ bestScore = s; best = r; }
+  }
+  if(bestScore < min) return null;
+  return { ...best, score: bestScore };
+}
+
+/* ==================== NAV ==================== */
+function setupNav(){
+  document.querySelectorAll('.nav-item').forEach(item=>{
+    item.addEventListener('click', ()=>{
+      document.querySelectorAll('.nav-item').forEach(i=>i.classList.remove('active'));
+      item.classList.add('active');
+      const tab = item.dataset.tab;
+      currentTab = tab;
+      ['jogadores','novo','draft','times'].forEach(t=>{
+        document.getElementById('view-'+t).hidden = (t !== tab);
+      });
+      if(tab === 'novo') renderNovoDraft();
+      if(tab === 'draft') renderDraftTab();
+      if(tab === 'times') renderTimesTab();
+    });
+  });
+}
+function setupSubtabs(){
+  document.querySelectorAll('.subtab').forEach(st=>{
+    st.addEventListener('click', ()=>{
+      document.querySelectorAll('.subtab').forEach(i=>i.classList.remove('active'));
+      st.classList.add('active');
+      const sub = st.dataset.subtab;
+      currentSubtab = sub;
+      ['players','coaches'].forEach(s=>{
+        document.getElementById('subview-'+s).hidden = (s !== sub);
+      });
+    });
+  });
+}
+
+/* ==================== AVATAR ==================== */
+function initials(name){
+  return String(name||'').trim().split(/\s+/).map(w=>w[0]).slice(0,2).join('').toUpperCase();
+}
+function avatarHtml(item, size=''){
+  const cls = 'avatar' + (size ? ' ' + size : '');
+  if(item && item.photo){
+    return `<span class="${cls}"><img src="${escapeHtml(item.photo)}" alt="${escapeHtml(item.name)}" loading="lazy" onerror="this.style.display='none';this.parentNode.textContent='${escapeHtml(initials(item.name))}';"></span>`;
+  }
+  return `<span class="${cls}">${escapeHtml(initials(item?.name||'?'))}</span>`;
+}
+function chipPhotoHtml(item){
+  if(item && item.photo){
+    return `<img class="chip-photo" src="${escapeHtml(item.photo)}" alt="" loading="lazy" onerror="this.style.display='none';">`;
+  }
+  return `<span class="chip-photo-placeholder">${escapeHtml(initials(item?.name||'?'))}</span>`;
+}
+
+/* ==================== JOGADORES ==================== */
+function renderPosDatalist(){
+  const dl = document.getElementById('pos-list');
+  dl.innerHTML = distinctPositions().map(p=>`<option value="${escapeHtml(p)}">`).join('');
+  const filter = document.getElementById('pt-filter');
+  const current = filter.value;
+  filter.innerHTML = '<option value="">Todas as posições</option>' +
+    distinctPositions().map(p=>`<option value="${escapeHtml(p)}">${escapeHtml(p)}</option>`).join('');
+  filter.value = current;
+}
+function updateSubtabCounts(){
+  const cp = document.getElementById('subtab-count-players');
+  const cc = document.getElementById('subtab-count-coaches');
+  if(cp) cp.textContent = playersOnly().length ? `(${playersOnly().length})` : '';
+  if(cc) cc.textContent = coachesOnly().length ? `(${coachesOnly().length})` : '';
+}
+function renderPlayersTable(){
+  const wrap = document.getElementById('players-table-wrap');
+  const countEl = document.getElementById('players-count');
+  const list0 = playersOnly();
+  if(countEl) countEl.textContent = list0.length ? `(${list0.length})` : '';
+  const search = document.getElementById('pt-search').value.trim().toLowerCase();
+  const filterPos = document.getElementById('pt-filter').value;
+  const list = list0.filter(p=>{
+    const matchName = !search || p.name.toLowerCase().includes(search);
+    const matchPos = !filterPos || p.position === filterPos;
+    return matchName && matchPos;
+  });
+  if(list0.length === 0){ wrap.innerHTML = '<div class="empty-state">Nenhum jogador cadastrado ainda.</div>'; return; }
+  if(list.length === 0){ wrap.innerHTML = '<div class="empty-state">Nenhum jogador encontrado com esse filtro.</div>'; return; }
+  wrap.innerHTML = `<table>
+    <thead><tr><th>Nome</th><th>Posição</th><th>Observações</th><th></th></tr></thead>
+    <tbody>
+      ${list.map(p=>`
+        <tr>
+          <td><div class="name-cell">${avatarHtml(p, 'small')}<span>${escapeHtml(p.name)}</span></div></td>
+          <td><span class="tag">${escapeHtml(p.position)}</span></td>
+          <td style="color:var(--muted);">${escapeHtml(p.notes||'')}</td>
+          <td style="text-align:right;white-space:nowrap;">
+            <button class="btn btn-ghost btn-sm" data-photo="${p.id}" type="button">Foto</button>
+            <button class="btn btn-ghost btn-sm" data-edit="${p.id}" type="button">Editar</button>
+            <button class="btn btn-danger btn-sm" data-del="${p.id}" type="button">Excluir</button>
+          </td>
+        </tr>`).join('')}
+    </tbody>
+  </table>`;
+  wrap.querySelectorAll('[data-edit]').forEach(btn=>{ btn.addEventListener('click', ()=> startEditPlayer(btn.dataset.edit)); });
+  wrap.querySelectorAll('[data-del]').forEach(btn=>{ btn.addEventListener('click', ()=> deleteItem(btn.dataset.del)); });
+  wrap.querySelectorAll('[data-photo]').forEach(btn=>{ btn.addEventListener('click', ()=> openPhotoModal(btn.dataset.photo)); });
+}
+function renderCoachesTable(){
+  const wrap = document.getElementById('coaches-table-wrap');
+  const countEl = document.getElementById('coaches-count');
+  const list0 = coachesOnly();
+  if(countEl) countEl.textContent = list0.length ? `(${list0.length})` : '';
+  const search = document.getElementById('ct-search').value.trim().toLowerCase();
+  const list = list0.filter(c => !search || c.name.toLowerCase().includes(search));
+  if(list0.length === 0){ wrap.innerHTML = '<div class="empty-state">Nenhum treinador cadastrado ainda.</div>'; return; }
+  if(list.length === 0){ wrap.innerHTML = '<div class="empty-state">Nenhum treinador encontrado com esse filtro.</div>'; return; }
+  wrap.innerHTML = `<table>
+    <thead><tr><th>Nome</th><th>Observações</th><th></th></tr></thead>
+    <tbody>
+      ${list.map(c=>`
+        <tr>
+          <td><div class="name-cell">${avatarHtml(c, 'small')}<span>${escapeHtml(c.name)}</span></div></td>
+          <td style="color:var(--muted);">${escapeHtml(c.notes||'')}</td>
+          <td style="text-align:right;white-space:nowrap;">
+            <button class="btn btn-ghost btn-sm" data-photo="${c.id}" type="button">Foto</button>
+            <button class="btn btn-ghost btn-sm" data-edit="${c.id}" type="button">Editar</button>
+            <button class="btn btn-danger btn-sm" data-del="${c.id}" type="button">Excluir</button>
+          </td>
+        </tr>`).join('')}
+    </tbody>
+  </table>`;
+  wrap.querySelectorAll('[data-edit]').forEach(btn=>{ btn.addEventListener('click', ()=> startEditCoach(btn.dataset.edit)); });
+  wrap.querySelectorAll('[data-del]').forEach(btn=>{ btn.addEventListener('click', ()=> deleteItem(btn.dataset.del)); });
+  wrap.querySelectorAll('[data-photo]').forEach(btn=>{ btn.addEventListener('click', ()=> openPhotoModal(btn.dataset.photo)); });
+}
+function startEditPlayer(id){
+  const p = items.find(x=>x.id === id && isPlayer(x));
+  if(!p) return;
+  editingPlayerId = id;
+  document.getElementById('pf-nome').value = p.name;
+  document.getElementById('pf-pos').value = p.position;
+  document.getElementById('pf-obs').value = p.notes || '';
+  document.getElementById('pf-photo').value = p.photo || '';
+  document.getElementById('pf-submit').textContent = 'Salvar alterações';
+  document.getElementById('pf-cancel').hidden = false;
+  document.getElementById('pf-nome').focus();
+}
+function cancelEditPlayer(){
+  editingPlayerId = null;
+  document.getElementById('player-form').reset();
+  document.getElementById('pf-submit').textContent = 'Adicionar jogador';
+  document.getElementById('pf-cancel').hidden = true;
+}
+function startEditCoach(id){
+  const c = items.find(x=>x.id === id && isCoach(x));
+  if(!c) return;
+  editingCoachId = id;
+  document.getElementById('cf-nome').value = c.name;
+  document.getElementById('cf-obs').value = c.notes || '';
+  document.getElementById('cf-photo').value = c.photo || '';
+  document.getElementById('cf-submit').textContent = 'Salvar alterações';
+  document.getElementById('cf-cancel').hidden = false;
+  document.getElementById('cf-nome').focus();
+}
+function cancelEditCoach(){
+  editingCoachId = null;
+  document.getElementById('coach-form').reset();
+  document.getElementById('cf-submit').textContent = 'Adicionar treinador';
+  document.getElementById('cf-cancel').hidden = true;
+}
+async function deleteItem(id){
+  items = items.filter(it=>it.id !== id);
+  renderPosDatalist(); renderPlayersTable(); renderCoachesTable(); updateSubtabCounts();
+  await saveItems();
+}
+function setupJogadoresView(){
+  document.getElementById('player-form').addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    const name = document.getElementById('pf-nome').value.trim();
+    const position = document.getElementById('pf-pos').value.trim();
+    const notes = document.getElementById('pf-obs').value.trim();
+    const photo = document.getElementById('pf-photo').value.trim();
+    if(!name || !position) return;
+    if(editingPlayerId){
+      const p = items.find(x=>x.id === editingPlayerId);
+      p.name = name; p.position = position; p.notes = notes;
+      if(photo) p.photo = photo; else delete p.photo;
+    } else {
+      const obj = {id: uid(), type:'player', name, position, notes};
+      if(photo) obj.photo = photo;
+      items.push(obj);
+    }
+    cancelEditPlayer();
+    renderPosDatalist(); renderPlayersTable(); updateSubtabCounts();
+    await saveItems();
+  });
+  document.getElementById('coach-form').addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    const name = document.getElementById('cf-nome').value.trim();
+    const notes = document.getElementById('cf-obs').value.trim();
+    const photo = document.getElementById('cf-photo').value.trim();
+    if(!name) return;
+    if(editingCoachId){
+      const c = items.find(x=>x.id === editingCoachId);
+      c.name = name; c.notes = notes;
+      if(photo) c.photo = photo; else delete c.photo;
+    } else {
+      const obj = {id: uid(), type:'coach', name, notes};
+      if(photo) obj.photo = photo;
+      items.push(obj);
+    }
+    cancelEditCoach();
+    renderCoachesTable(); updateSubtabCounts();
+    await saveItems();
+  });
+  document.getElementById('pf-photo-btn').addEventListener('click', ()=>{
+    const name = document.getElementById('pf-nome').value.trim();
+    if(!name) return;
+    openPhotoSearchDialog(name, 'player', (url, action)=>{
+      if(action === 'remove') document.getElementById('pf-photo').value = '';
+      else if(url) document.getElementById('pf-photo').value = url;
+    }, document.getElementById('pf-photo').value);
+  });
+  document.getElementById('cf-photo-btn').addEventListener('click', ()=>{
+    const name = document.getElementById('cf-nome').value.trim();
+    if(!name) return;
+    openPhotoSearchDialog(name, 'manager', (url, action)=>{
+      if(action === 'remove') document.getElementById('cf-photo').value = '';
+      else if(url) document.getElementById('cf-photo').value = url;
+    }, document.getElementById('cf-photo').value);
+  });
+  document.getElementById('pf-cancel').addEventListener('click', cancelEditPlayer);
+  document.getElementById('cf-cancel').addEventListener('click', cancelEditCoach);
+  document.getElementById('pt-search').addEventListener('input', renderPlayersTable);
+  document.getElementById('pt-filter').addEventListener('change', renderPlayersTable);
+  document.getElementById('ct-search').addEventListener('input', renderCoachesTable);
+  document.getElementById('bulk-photo-btn').addEventListener('click', ()=> bulkPhotoSearch(false));
+  document.getElementById('bulk-photo-missing-btn').addEventListener('click', ()=> bulkPhotoSearch(true));
+  setupCsvImport();
+  setupDangerZone();
+  renderPosDatalist(); renderPlayersTable(); renderCoachesTable(); updateSubtabCounts();
+}
+
+/* ==================== MODAL DE FOTO ==================== */
+function openPhotoModal(itemId){
+  const item = items.find(x=>x.id === itemId);
+  if(!item) return;
+  const wantType = isCoach(item) ? 'manager' : 'player';
+  openPhotoSearchDialog(item.name, wantType, (url, action)=>{
+    if(action === 'remove') delete item.photo;
+    else if(url) item.photo = url;
+    saveItems();
+    renderPlayersTable(); renderCoachesTable();
+  }, item.photo);
+}
+function openPhotoSearchDialog(initialName, wantType, onConfirm, currentPhoto){
+  const backdrop = document.createElement('div');
+  backdrop.className = 'modal-backdrop';
+  backdrop.innerHTML = `
+    <div class="modal">
+      <h3>Buscar foto — Sofascore</h3>
+      <p>Só mostramos resultados do tipo correto (${wantType === 'manager' ? 'treinador' : 'jogador'}).</p>
+      <div class="photo-search-input">
+        <input type="text" id="photo-q" placeholder="Nome..." value="${escapeHtml(initialName)}">
+        <button type="button" class="btn btn-primary" id="photo-go">Buscar</button>
+      </div>
+      <div class="photo-search-status" id="photo-status">Pronto para buscar.</div>
+      <div class="photo-results" id="photo-results"></div>
+      <div class="photo-search-input">
+        <input type="url" id="photo-manual" placeholder="Cole uma URL ou ID (ex.: 750)">
+        <button type="button" class="btn" id="photo-use-manual">Usar</button>
+      </div>
+      <div class="btn-row">
+        ${currentPhoto ? `<button type="button" class="btn btn-danger" id="photo-remove">Remover foto atual</button>` : ''}
+        <button type="button" class="btn btn-ghost" id="photo-cancel">Cancelar</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(backdrop);
+  const qInput = backdrop.querySelector('#photo-q');
+  const statusEl = backdrop.querySelector('#photo-status');
+  const resultsEl = backdrop.querySelector('#photo-results');
+  const manualInput = backdrop.querySelector('#photo-manual');
+  function close(){ document.body.removeChild(backdrop); }
+  backdrop.addEventListener('click', (e)=>{ if(e.target === backdrop) close(); });
+  backdrop.querySelector('#photo-cancel').addEventListener('click', close);
+  const removeBtn = backdrop.querySelector('#photo-remove');
+  if(removeBtn) removeBtn.addEventListener('click', ()=>{ close(); onConfirm(null, 'remove'); });
+  backdrop.querySelector('#photo-use-manual').addEventListener('click', ()=>{
+    const v = manualInput.value.trim();
+    if(!v) return;
+    let url = v;
+    if(/^\d+$/.test(v)) url = wantType === 'manager' ? SOFA_IMG_MANAGER(v) : SOFA_IMG_PLAYER(v);
+    else if(!/^https?:\/\//i.test(v)){ statusEl.innerHTML = '<span style="color:var(--red);">URL inválida.</span>'; return; }
+    close(); onConfirm(url, 'set');
+  });
+  async function doSearch(){
+    const q = qInput.value.trim();
+    if(!q){ statusEl.textContent = 'Digite um nome.'; return; }
+    statusEl.textContent = 'Buscando no Sofascore...';
+    resultsEl.innerHTML = '';
+    const res = await searchSofascore(q);
+    if(!Array.isArray(res)){
+      statusEl.innerHTML = `<span style="color:var(--red);">Busca indisponível (${escapeHtml(res?.error||'bloqueado')}). Use o campo manual.</span>`;
+      resultsEl.innerHTML = `<div style="grid-column: 1 / -1; color:var(--muted); font-size:12.5px; padding:10px 0;">
+        Abra <a href="https://www.sofascore.com/search?q=${encodeURIComponent(q)}" target="_blank" rel="noopener" style="color:var(--amber);">sofascore.com/search?q=${escapeHtml(q)}</a>, copie o ID da URL e cole abaixo.
+      </div>`;
+      return;
+    }
+    const filtered = res.filter(r => r.type === wantType);
+    if(filtered.length === 0){ statusEl.textContent = 'Nenhum resultado.'; return; }
+    const scored = filtered.map(r => ({ ...r, score: nameScore(q, r.name) }));
+    scored.sort((a,b)=> b.score - a.score);
+    statusEl.innerHTML = `<span style="color:var(--green);">${scored.length} resultado(s).</span> Clique para usar.`;
+    resultsEl.innerHTML = scored.map(r=>`
+      <div class="photo-card" data-url="${escapeHtml(r.photoUrl||'')}">
+        <img src="${escapeHtml(r.photoUrl||'')}" alt="" loading="lazy" onerror="this.style.opacity=0.2;">
+        <div class="pc-name">${escapeHtml(r.name)}</div>
+        <div class="pc-meta">${escapeHtml(r.type)}${r.meta ? ' · ' + escapeHtml(r.meta) : ''} · ${r.score}%</div>
+      </div>
+    `).join('');
+    resultsEl.querySelectorAll('.photo-card').forEach(card=>{
+      card.addEventListener('click', ()=>{
+        const url = card.dataset.url;
+        if(url){ close(); onConfirm(url, 'set'); }
+      });
+    });
+  }
+  backdrop.querySelector('#photo-go').addEventListener('click', doSearch);
+  qInput.addEventListener('keydown', (e)=>{ if(e.key === 'Enter'){ e.preventDefault(); doSearch(); } });
+  qInput.focus(); qInput.select();
+}
+
+/* ==================== BUSCA EM LOTE ==================== */
+async function bulkPhotoSearch(onlyMissing){
+  const statusEl = document.getElementById('bulk-photo-status');
+  const targets = items.filter(it => onlyMissing ? !it.photo : true);
+  if(targets.length === 0){ statusEl.textContent = onlyMissing ? 'Todos já têm foto.' : 'Nenhum cadastro.'; return; }
+  statusEl.textContent = `Buscando fotos... 0/${targets.length}`;
+  let ok = 0, fail = 0;
+  for(let i=0;i<targets.length;i++){
+    const it = targets[i];
+    const wantType = isCoach(it) ? 'manager' : 'player';
+    const res = await searchSofascore(it.name);
+    if(Array.isArray(res) && res.length > 0){
+      const best = pickBestMatch(it.name, res, wantType, 65);
+      if(best && best.photoUrl){ it.photo = best.photoUrl; ok++; }
+      else fail++;
+    } else fail++;
+    statusEl.textContent = `Buscando fotos... ${i+1}/${targets.length} · ${ok} ok, ${fail} sem match`;
+    if((i+1) % 5 === 0) await saveItems();
+    await new Promise(r => setTimeout(r, 300));
+  }
+  await saveItems();
+  renderPlayersTable(); renderCoachesTable();
+  statusEl.innerHTML = `<span style="color:var(--green);">✓ ${ok} foto(s)</span>${fail ? ` · <span style="color:var(--muted);">${fail} sem match</span>` : ''}.`;
+}
+
+/* ==================== CSV IMPORT ==================== */
+function splitCsvLine(line){
+  const out = []; let cur = ''; let inQuotes = false;
+  for(let i=0;i<line.length;i++){
+    const ch = line[i];
+    if(inQuotes){
+      if(ch === '"'){ if(line[i+1] === '"'){ cur += '"'; i++; } else inQuotes = false; }
+      else cur += ch;
+    } else {
+      if(ch === '"') inQuotes = true;
+      else if(ch === ','){ out.push(cur); cur = ''; }
+      else cur += ch;
+    }
+  }
+  out.push(cur); return out;
+}
+function splitWithDelim(line, delim){
+  if(delim === ',') return splitCsvLine(line);
+  const out = []; let cur = ''; let inQ = false;
+  for(let i=0;i<line.length;i++){
+    const ch = line[i];
+    if(inQ){
+      if(ch === '"'){ if(line[i+1] === '"'){ cur += '"'; i++; } else inQ = false; }
+      else cur += ch;
+    } else {
+      if(ch === '"') inQ = true;
+      else if(ch === delim){ out.push(cur); cur = ''; }
+      else cur += ch;
+    }
+  }
+  out.push(cur); return out;
+}
+function normalizeHeader(s){ return String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim().toLowerCase(); }
+
+function parseCsvImport(rawText){
+  if(!rawText || !rawText.trim()) return { items: [], meta: { format: 'empty' } };
+  let text = rawText.replace(/^\uFEFF/, '');
+  const firstRealLine = text.split(/\r\n|\n|\r/).find(l => l.trim().length > 0) || '';
+  const commaCount = (firstRealLine.match(/,/g)||[]).length;
+  const semiCount = (firstRealLine.match(/;/g)||[]).length;
+  const tabCount = (firstRealLine.match(/\t/g)||[]).length;
+  let delim = ',';
+  if(tabCount > commaCount && tabCount > semiCount) delim = '\t';
+  else if(semiCount > commaCount) delim = ';';
+  if(delim === ',') text = text.replace(/,{2,}/g, ',');
+  else if(delim === ';') text = text.replace(/;{2,}/g, ';');
+  const rawLines = text.split(/\r\n|\n|\r/);
+  const cleanedLines = rawLines.filter(l => {
+    const t = l.trim();
+    if(!t) return false;
+    if(/^[,\s;]+$/.test(t)) return false;
+    return true;
+  });
+  if(cleanedLines.length === 0) return { items: [], meta: { format: 'empty' } };
+  const rows = cleanedLines.map(l => splitWithDelim(l, delim).map(c => c.trim()));
+  const header = rows[0];
+  const firstRowCells = header.filter(c => c !== '');
+  if(rows.length >= 2 && firstRowCells.length === 2){
+    const h0 = normalizeHeader(header[0]);
+    const h1 = normalizeHeader(header[1]);
+    const isHeader = (
+      h0.startsWith('nome') || h0.startsWith('name') || h0 === 'jogador' || h0 === 'player' ||
+      h1.startsWith('pos') || h1.startsWith('position')
+    );
+    const allRowsTwoCols = rows.slice(1).every(r => r.filter(c=>c!=='').length === 2);
+    if(isHeader || allRowsTwoCols){
+      const out = [];
+      const startIdx = isHeader ? 1 : 0;
+      for(let i=startIdx;i<rows.length;i++){
+        const cells = rows[i].filter(c => c !== '');
+        if(cells.length < 2) continue;
+        const name = cells[0], position = cells[1];
+        if(!name || !position) continue;
+        const type = isCoachColumn(position) ? 'coach' : 'player';
+        out.push({ name, position: type === 'coach' ? 'Treinador' : position, type });
+      }
+      if(out.length > 0) return { items: out, meta: { format: 'two-col', delim } };
+    }
+  }
+  const nonEmptyHeaderCells = header.filter(c => c !== '');
+  if(nonEmptyHeaderCells.length >= 2 && rows.length >= 2){
+    let matches = 0;
+    const sampleSize = Math.min(rows.length - 1, 10);
+    for(let r=1;r<=sampleSize;r++){
+      const row = rows[r];
+      let rowMatches = 0, colsWithHeader = 0;
+      for(let c=0;c<header.length;c++){
+        if(header[c] !== ''){ colsWithHeader++; if(row[c] && row[c] !== '') rowMatches++; }
+      }
+      if(colsWithHeader > 0 && rowMatches / colsWithHeader > 0.3) matches++;
+    }
+    const matchRatio = matches / sampleSize;
+    if(matchRatio >= 0.5){
+      const out = [];
+      for(let c=0;c<header.length;c++){
+        const position = (header[c] || '').trim();
+        if(!position) continue;
+        const coachCol = isCoachColumn(position);
+        for(let r=1;r<rows.length;r++){
+          const cell = (rows[r][c] || '').trim();
+          if(!cell) continue;
+          if(cell === position) continue;
+          out.push({ name: cell, position: coachCol ? 'Treinador' : position, type: coachCol ? 'coach' : 'player' });
+        }
+      }
+      if(out.length > 0) return { items: out, meta: { format: 'columns-as-positions', delim } };
+    }
+  }
+  const out = [];
+  for(const r of rows){
+    const cells = r.filter(c => c !== '');
+    if(cells.length < 2) continue;
+    const name = cells[0], position = cells[1];
+    if(!name || !position) continue;
+    const type = isCoachColumn(position) ? 'coach' : 'player';
+    out.push({ name, position: type === 'coach' ? 'Treinador' : position, type });
+  }
+  return { items: out, meta: { format: 'fallback-rows', delim } };
+}
+function setupCsvImport(){
+  const fileInput = document.getElementById('csv-file-input');
+  const importBtn = document.getElementById('csv-import-btn');
+  const pasteBtn = document.getElementById('csv-parse-pasted');
+  const pasteArea = document.getElementById('csv-paste');
+  const statusEl = document.getElementById('csv-status');
+  function handleCsvText(text, source){
+    try{
+      const result = parseCsvImport(text);
+      const parsed = result.items || [];
+      if(parsed.length === 0){
+        statusEl.innerHTML = `<span style="color:var(--red);">Nenhum cadastro reconhecido (${source}). Formato: ${result.meta?.format || 'desconhecido'}.</span>`;
+        console.warn('CSV parse result:', result);
+        return;
+      }
+      statusEl.innerHTML = `<span style="color:var(--green);">${parsed.length} cadastro(s)</span> · formato: ${result.meta.format} · delimitador: "${result.meta.delim}".`;
+      showCsvPreviewModal(parsed, (chosen)=> applyCsvImport(chosen));
+    }catch(err){
+      console.error(err);
+      statusEl.innerHTML = '<span style="color:var(--red);">Falha: ' + escapeHtml(err.message||String(err)) + '</span>';
+    }
+  }
+  importBtn.addEventListener('click', ()=> fileInput.click());
+  fileInput.addEventListener('change', (e)=>{
+    const file = e.target.files && e.target.files[0];
+    fileInput.value = '';
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = ()=> handleCsvText(String(reader.result || ''), 'arquivo');
+    reader.onerror = ()=> { statusEl.innerHTML = '<span style="color:var(--red);">Falha ao ler o arquivo.</span>'; };
+    reader.readAsText(file, 'utf-8');
+  });
+  pasteBtn.addEventListener('click', ()=>{
+    const text = pasteArea.value;
+    if(!text || !text.trim()){ statusEl.innerHTML = '<span style="color:var(--red);">Cole o CSV antes.</span>'; return; }
+    handleCsvText(text, 'texto colado');
+  });
+}
+function showCsvPreviewModal(parsed, onConfirm){
+  const byPos = {}; const coaches = [];
+  parsed.forEach(p=>{
+    if(p.type === 'coach'){ coaches.push(p); return; }
+    if(!byPos[p.position]) byPos[p.position] = 0;
+    byPos[p.position]++;
+  });
+  const totalPlayers = parsed.length - coaches.length;
+  const backdrop = document.createElement('div');
+  backdrop.className = 'modal-backdrop';
+  backdrop.innerHTML = `
+    <div class="modal">
+      <h3>Importar do CSV</h3>
+      <p>Encontramos <b>${totalPlayers}</b> jogador(es) e <b>${coaches.length}</b> treinador(es).</p>
+      <div class="csv-detected">
+        ${Object.entries(byPos).map(([pos, qty])=>`<span><b>${escapeHtml(pos)}</b>: ${qty}</span>`).join('')}
+        ${coaches.length ? `<span><b class="coach-b">Treinadores</b>: ${coaches.length}</span>` : ''}
+      </div>
+      <div class="csv-preview">${escapeHtml(
+        parsed.slice(0, 40).map(p => `${p.name} — ${p.position}${p.type==='coach'?' [TREINADOR]':''}`).join('\n') +
+        (parsed.length > 40 ? `\n... e mais ${parsed.length - 40}` : '')
+      )}</div>
+      <div class="btn-row">
+        <button class="btn btn-primary" data-action="append">Adicionar aos existentes</button>
+        <button class="btn" data-action="replace">Substituir todos</button>
+        <button class="btn btn-ghost" data-action="cancel">Cancelar</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(backdrop);
+  function close(){ document.body.removeChild(backdrop); }
+  backdrop.addEventListener('click', (e)=>{ if(e.target === backdrop) close(); });
+  backdrop.querySelectorAll('[data-action]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const action = btn.dataset.action;
+      if(action === 'cancel'){ close(); return; }
+      close();
+      onConfirm({ parsed, mode: action });
+    });
+  });
+}
+async function applyCsvImport({parsed, mode}){
+  const statusEl = document.getElementById('csv-status');
+  function keyOf(it){ return (it.type||'player') + '::' + it.name.trim().toLowerCase() + '::' + (it.position||'').trim().toLowerCase(); }
+  let base = mode === 'replace' ? [] : items.slice();
+  const existingKeys = new Set(base.map(keyOf));
+  let addedP = 0, addedC = 0, skipped = 0;
+  for(const p of parsed){
+    const name = (p.name||'').trim();
+    if(!name){ skipped++; continue; }
+    const type = p.type === 'coach' ? 'coach' : 'player';
+    const position = type === 'coach' ? 'Treinador' : (p.position||'').trim();
+    if(type === 'player' && !position){ skipped++; continue; }
+    const candidate = {id: uid(), type, name, position, notes: ''};
+    if(existingKeys.has(keyOf(candidate))){ skipped++; continue; }
+    existingKeys.add(keyOf(candidate));
+    base.push(candidate);
+    if(type === 'coach') addedC++; else addedP++;
+  }
+  items = base;
+  renderPosDatalist(); renderPlayersTable(); renderCoachesTable(); updateSubtabCounts();
+  await saveItems();
+  statusEl.innerHTML =
+    `<span style="color:var(--green);">✓ ${addedP} jogador(es)</span>` +
+    (addedC ? ` · <span style="color:#e8c694;">${addedC} treinador(es)</span>` : '') +
+    (skipped ? ` · <span style="color:var(--muted);">${skipped} ignorado(s)</span>` : '') +
+    (mode === 'replace' ? ' · substituídos' : '');
+}
+
+/* ==================== ZONA DE PERIGO ==================== */
+function setupDangerZone(){
+  const view = document.getElementById('view-jogadores');
+  const card = document.createElement('div');
+  card.className = 'card danger-zone';
+  card.innerHTML = `
+    <div class="card-title">Zona de perigo</div>
+    <p style="color:var(--muted);margin:0 0 14px;font-size:12.5px;">Ações irreversíveis.</p>
+    <div class="btn-row">
+      <button type="button" class="btn btn-danger" id="dz-clear-players">Limpar jogadores e treinadores</button>
+      <button type="button" class="btn btn-danger" id="dz-clear-drafts">Limpar drafts</button>
+      <button type="button" class="btn btn-danger" id="dz-clear-all">Limpar tudo</button>
+    </div>
+    <div id="dz-status" style="color:var(--muted);font-size:12.5px;margin-top:10px;"></div>
+  `;
+  view.appendChild(card);
+  const statusEl = card.querySelector('#dz-status');
+  card.querySelector('#dz-clear-players').addEventListener('click', async ()=>{
+    if(items.length === 0){ statusEl.textContent = 'Nada para limpar.'; return; }
+    if(!confirm(`Apagar TODOS os ${items.length} jogadores e treinadores?`)) return;
+    items = [];
+    renderPosDatalist(); renderPlayersTable(); renderCoachesTable(); updateSubtabCounts();
+    await saveItems();
+    statusEl.innerHTML = '<span style="color:var(--green);">✓ Apagados.</span>';
+  });
+  card.querySelector('#dz-clear-drafts').addEventListener('click', async ()=>{
+    if(drafts.length === 0){ statusEl.textContent = 'Nada para limpar.'; return; }
+    if(!confirm(`Apagar TODOS os ${drafts.length} drafts?`)) return;
+    drafts = []; currentDraftId = null; currentTimesDraftId = null;
+    selectedSlots = []; slotSearchTerms = []; collapsedGroups = {};
+    await saveDrafts();
+    statusEl.innerHTML = '<span style="color:var(--green);">✓ Drafts apagados.</span>';
+  });
+  card.querySelector('#dz-clear-all').addEventListener('click', async ()=>{
+    if(items.length === 0 && drafts.length === 0){ statusEl.textContent = 'Nada para limpar.'; return; }
+    if(!confirm(`Apagar TUDO?`)) return;
+    items = []; drafts = []; currentDraftId = null; currentTimesDraftId = null;
+    selectedSlots = []; slotSearchTerms = []; collapsedGroups = {};
+    renderPosDatalist(); renderPlayersTable(); renderCoachesTable(); updateSubtabCounts();
+    await Promise.all([saveItems(), saveDrafts()]);
+    statusEl.innerHTML = '<span style="color:var(--green);">✓ Tudo apagado.</span>';
+  });
+}
+
+/* ==================== EXPORT/IMPORT DRAFT ==================== */
+function buildDraftPayload(draft){
+  return { _meta: { app: 'sala-de-draft', version: 1, exportedAt: new Date().toISOString() }, draft };
+}
+async function exportDraft(draft){
+  const json = JSON.stringify(buildDraftPayload(draft), null, 2);
+  let downloadOk = false;
+  try{
+    const blob = new Blob([json], {type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const safeName = (draft.name || 'draft').replace(/[^\w\-]+/g, '_').slice(0,60);
+    a.href = url; a.download = `${safeName}_${draft.id}.json`;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(()=> URL.revokeObjectURL(url), 1000);
+    downloadOk = true;
+  }catch(e){ console.warn('Download falhou:', e); }
+  let clipboardOk = false;
+  try{ if(navigator.clipboard && navigator.clipboard.writeText){ await navigator.clipboard.writeText(json); clipboardOk = true; } }
+  catch(e){ console.warn('Clipboard falhou:', e); }
+  showExportModal(draft, json, downloadOk, clipboardOk);
+}
+function showExportModal(draft, json, downloadOk, clipboardOk){
+  const backdrop = document.createElement('div');
+  backdrop.className = 'modal-backdrop';
+  backdrop.innerHTML = `
+    <div class="modal">
+      <h3>Exportar draft — ${escapeHtml(draft.name || 'sem nome')}</h3>
+      <p>${downloadOk ? '✓ Download iniciado.' : '⚠ Download automático indisponível.'} ${clipboardOk ? '✓ Copiado para o clipboard.' : ''}<br>Se necessário, copie o JSON abaixo.</p>
+      <textarea class="json-box" id="export-json" readonly>${escapeHtml(json)}</textarea>
+      <div class="btn-row" style="margin-top:10px;">
+        <button type="button" class="btn btn-primary" id="export-copy">Copiar JSON</button>
+        <button type="button" class="btn" id="export-download">Tentar download novamente</button>
+        <button type="button" class="btn btn-ghost" id="export-close">Fechar</button>
+      </div>
+      <div id="export-status" style="color:var(--muted);font-size:12.5px;margin-top:10px;"></div>
+    </div>
+  `;
+  document.body.appendChild(backdrop);
+  const statusEl = backdrop.querySelector('#export-status');
+  const ta = backdrop.querySelector('#export-json');
+  function close(){ document.body.removeChild(backdrop); }
+  backdrop.addEventListener('click', (e)=>{ if(e.target === backdrop) close(); });
+  backdrop.querySelector('#export-close').addEventListener('click', close);
+  backdrop.querySelector('#export-copy').addEventListener('click', async ()=>{
+    try{
+      ta.select(); ta.setSelectionRange(0, 999999);
+      const ok = document.execCommand('copy');
+      if(!ok && navigator.clipboard) await navigator.clipboard.writeText(json);
+      statusEl.innerHTML = '<span style="color:var(--green);">✓ JSON copiado.</span>';
+    }catch(e){ statusEl.innerHTML = '<span style="color:var(--red);">Falha.</span>'; ta.focus(); ta.select(); }
+  });
+  backdrop.querySelector('#export-download').addEventListener('click', ()=>{
+    try{
+      const blob = new Blob([json], {type:'application/json'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const safeName = (draft.name || 'draft').replace(/[^\w\-]+/g, '_').slice(0,60);
+      a.href = url; a.download = `${safeName}_${draft.id}.json`;
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      setTimeout(()=> URL.revokeObjectURL(url), 1000);
+      statusEl.innerHTML = '<span style="color:var(--green);">✓ Nova tentativa.</span>';
+    }catch(e){ statusEl.innerHTML = '<span style="color:var(--red);">Falhou.</span>'; }
+  });
+}
+function importDraftFromJson(text, statusEl){
+  let parsed;
+  try{ parsed = JSON.parse(text); }
+  catch(e){ statusEl.innerHTML = '<span style="color:var(--red);">JSON inválido: ' + escapeHtml(e.message) + '</span>'; return; }
+  let list = [];
+  if(parsed && parsed._meta && parsed.draft) list = [parsed.draft];
+  else if(parsed && parsed.id && Array.isArray(parsed.teams)) list = [parsed];
+  else if(parsed && Array.isArray(parsed.drafts)) list = parsed.drafts.filter(d => d && d.id && Array.isArray(d.teams));
+  else { statusEl.innerHTML = '<span style="color:var(--red);">Formato não reconhecido.</span>'; return; }
+  if(list.length === 0){ statusEl.innerHTML = '<span style="color:var(--red);">Nenhum draft válido.</span>'; return; }
+  showImportDraftModal(list, statusEl);
+}
+function showImportDraftModal(incomingDrafts, statusEl){
+  const existingIds = new Set(drafts.map(d => d.id));
+  const conflicts = incomingDrafts.filter(d => existingIds.has(d.id));
+  const backdrop = document.createElement('div');
+  backdrop.className = 'modal-backdrop';
+  backdrop.innerHTML = `
+    <div class="modal">
+      <h3>Importar draft${incomingDrafts.length>1?'s':''}</h3>
+      <p>${incomingDrafts.length} draft${incomingDrafts.length>1?'s':''}${conflicts.length?` · <b style="color:var(--red);">${conflicts.length} conflito(s)</b>`:''}.</p>
+      <div class="csv-detected">
+        ${incomingDrafts.map(d=>`<span><b>${escapeHtml(d.name||'Sem nome')}</b> · ${d.teams.length} time(s) · ${d.rounds} rodada(s) · ${d.picks?d.picks.length:0} pick(s)</span>`).join('<br>')}
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" data-action="new">Importar como novo(s)</button>
+        ${conflicts.length ? `<button class="btn" data-action="overwrite">Sobrescrever conflitantes</button>` : ''}
+        <button class="btn btn-ghost" data-action="cancel">Cancelar</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(backdrop);
+  function close(){ document.body.removeChild(backdrop); }
+  backdrop.addEventListener('click', (e)=>{ if(e.target === backdrop) close(); });
+  backdrop.querySelectorAll('[data-action]').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      const action = btn.dataset.action;
+      if(action === 'cancel'){ close(); return; }
+      close();
+      if(action === 'new'){
+        incomingDrafts.forEach(d=>{
+          const copy = JSON.parse(JSON.stringify(d));
+          copy.id = uid();
+          copy.name = (copy.name || 'Draft importado') + ' (importado)';
+          drafts.push(copy);
+        });
+      } else if(action === 'overwrite'){
+        incomingDrafts.forEach(d=>{
+          const idx = drafts.findIndex(x => x.id === d.id);
+          const copy = JSON.parse(JSON.stringify(d));
+          if(idx >= 0) drafts[idx] = copy; else drafts.push(copy);
+        });
+      }
+      await saveDrafts();
+      currentDraftId = drafts[drafts.length-1].id;
+      currentTimesDraftId = currentDraftId;
+      statusEl.innerHTML = `<span style="color:var(--green);">✓ ${incomingDrafts.length} importado(s).</span>`;
+      if(currentTab === 'draft') renderDraftTab();
+      if(currentTab === 'times') renderTimesTab();
+    });
+  });
+}
+
+/* ==================== NOVO DRAFT ==================== */
+function renderTeamsConfigList(){
+  const n = Math.max(2, parseInt(document.getElementById('nd-times').value || '0', 10));
+  const container = document.getElementById('teams-config-list');
+  const existing = [...container.querySelectorAll('input')].map(i=>i.value);
+  let html = '';
+  for(let i=0;i<n;i++){
+    const val = existing[i] !== undefined && existing[i] !== '' ? existing[i] : ('Time ' + (i+1));
+    html += `<div class="dyn-row"><span class="idx">${i+1}</span><input type="text" class="team-name-input" value="${escapeHtml(val)}"></div>`;
+  }
+  container.innerHTML = html;
+}
+function defaultPresetModel(){
+  const positions = distinctPositions();
+  if(positions.length === 0){
+    return [
+      {position:'Goleiro', qty:3},{position:'Zagueiro', qty:6},{position:'Lateral', qty:4},
+      {position:'Meia', qty:6},{position:'Atacante', qty:4}
+    ];
+  }
+  return positions.map(p => ({position:p, qty:0}));
+}
+function renderPresetPositionsList(){
+  const container = document.getElementById('preset-positions-list');
+  const positions = distinctPositions();
+  const current = {};
+  container.querySelectorAll('.preset-pos').forEach(inp=>{ current[inp.dataset.pos] = parseInt(inp.value||'0',10); });
+  if(presetModel.length === 0) presetModel = defaultPresetModel();
+  const merged = []; const seen = new Set();
+  presetModel.forEach(m => {
+    if(positions.includes(m.position)){
+      const val = current[m.position] !== undefined ? current[m.position] : m.qty;
+      merged.push({position:m.position, qty: val});
+      seen.add(m.position);
+    }
+  });
+  positions.forEach(p => { if(!seen.has(p)) merged.push({position:p, qty: current[p] !== undefined ? current[p] : 0}); });
+  presetModel = merged;
+  if(presetModel.length === 0){
+    container.innerHTML = '<div class="empty-state small">Nenhuma posição disponível. Cadastre jogadores na aba Jogadores primeiro.</div>';
+  } else {
+    container.innerHTML = presetModel.map(m=>`
+      <div class="preset-grid">
+        <span class="poslabel">${escapeHtml(m.position)}</span>
+        <input type="number" class="preset-pos" data-pos="${escapeHtml(m.position)}" min="0" max="60" value="${m.qty}">
+        <span style="color:var(--muted);font-size:12px;">jogador(es) por time</span>
+      </div>
+    `).join('');
+  }
+  container.querySelectorAll('.preset-pos').forEach(inp=>{
+    inp.addEventListener('input', ()=>{
+      const pos = inp.dataset.pos;
+      const val = Math.max(0, parseInt(inp.value||'0',10));
+      const entry = presetModel.find(m=>m.position===pos);
+      if(entry) entry.qty = val;
+      updatePresetSummary();
+      renderRoundsPreview();
+    });
+  });
+  updatePresetSummary();
+}
+function updatePresetSummary(){
+  const elenco = Math.max(1, parseInt(document.getElementById('nd-elenco').value||'0',10));
+  const total = presetModel.reduce((s,m)=>s+m.qty, 0);
+  const diff = elenco - total;
+  const summary = document.getElementById('preset-summary');
+  let statusHtml;
+  if(diff === 0) statusHtml = `<span class="preset-ok">✓ Modelo completo: ${total} / ${elenco}</span>`;
+  else if(diff > 0) statusHtml = `<span class="preset-bad">Faltam ${diff} (serão "Qualquer posição")</span>`;
+  else statusHtml = `<span class="preset-bad">Excesso de ${Math.abs(diff)} sobre ${elenco}</span>`;
+  summary.innerHTML = `
+    <span>Distribuído: <b>${total}</b></span>
+    <span>Elenco: <b>${elenco}</b></span>
+    ${statusHtml}
+  `;
+}
+function updateGeneralInfo(){
+  const elenco = Math.max(1, parseInt(document.getElementById('nd-elenco').value||'0',10));
+  const ppr = Math.max(1, parseInt(document.getElementById('nd-picks-por-rodada').value||'1',10));
+  const coaches = Math.max(0, parseInt(document.getElementById('nd-coaches').value||'0',10));
+  const rodadasJogadores = Math.ceil(elenco / ppr);
+  const rodadasTreinador = coaches > 0 ? Math.ceil(coaches / ppr) : 0;
+  const info = document.getElementById('nd-general-info');
+  if(info){
+    const resto = elenco % ppr;
+    const restoMsg = resto !== 0 ? ` A última rodada terá ${resto} slot(s).` : '';
+    const coachMsg = coaches > 0 ? ` ${coaches} treinador(es) em ${rodadasTreinador} rodada(s).` : ' Sem treinador.';
+    info.textContent = `${rodadasJogadores + rodadasTreinador} rodada(s) · ${ppr} pick(s)/rodada · ${elenco} jogadores + ${coaches} treinador(es).${restoMsg}${coachMsg}`;
+  }
+}
+function generatePlayerSlotsFromPreset(){
+  const elenco = Math.max(1, parseInt(document.getElementById('nd-elenco').value||'0',10));
+  const buckets = presetModel.filter(m=>m.qty > 0).map(m=>({position:m.position, remaining:m.qty}));
+  if(buckets.length === 0) return Array.from({length: elenco}, ()=>({position:'', type:'player'}));
+  const slots = [];
+  while(slots.length < elenco){
+    buckets.sort((a,b)=> b.remaining - a.remaining);
+    let placed = false;
+    for(const b of buckets){
+      if(slots.length >= elenco) break;
+      if(b.remaining > 0){ slots.push({position:b.position, type:'player'}); b.remaining--; placed = true; }
+    }
+    if(!placed) break;
+  }
+  while(slots.length < elenco) slots.push({position:'', type:'player'});
+  return slots;
+}
+function generateRoundRules(){
+  const ppr = Math.max(1, parseInt(document.getElementById('nd-picks-por-rodada').value||'1',10));
+  const coaches = Math.max(0, parseInt(document.getElementById('nd-coaches').value||'0',10));
+  const playerSlots = generatePlayerSlotsFromPreset();
+  const coachSlots = Array.from({length: coaches}, ()=>({position:'Treinador', type:'coach'}));
+  const rounds = [];
+  for(let i=0; i<playerSlots.length; i+=ppr) rounds.push({ slots: playerSlots.slice(i, i+ppr) });
+  for(let i=0; i<coachSlots.length; i+=ppr) rounds.push({ slots: coachSlots.slice(i, i+ppr) });
+  return rounds;
+}
+function summarizeRoundPatterns(rounds){
+  const map = new Map();
+  rounds.forEach((r, idx)=>{
+    const key = r.slots.map(s => s.type === 'coach' ? '🎓' : (s.position || '?')).join('|');
+    if(!map.has(key)){ map.set(key, { pattern: r.slots.map(s => ({...s})), count: 0, indices: [] }); }
+    const entry = map.get(key);
+    entry.count++;
+    entry.indices.push(idx);
+  });
+  return [...map.values()];
+}
+function renderRoundsPreview(){
+  const container = document.getElementById('rounds-preview-list');
+  const rounds = generateRoundRules();
+  const numTeams = Math.max(2, parseInt(document.getElementById('nd-times').value||'0',10));
+  if(rounds.length === 0){ container.innerHTML = '<div class="empty-state small">Nenhuma rodada gerada.</div>'; return; }
+  const patterns = summarizeRoundPatterns(rounds);
+  container.innerHTML = `
+    <p style="color:var(--muted);font-size:12.5px;margin:0 0 12px;">
+      ${rounds.length} rodada(s) · ${rounds.length * numTeams} pick(s) no total.
+    </p>
+    <div class="rounds-summary-grid">
+      ${patterns.map(p => `
+        <div class="round-pattern">
+          <div class="rp-head"><b>${p.count}×</b><span>padrão de rodada</span></div>
+          <div class="rp-slots">
+            ${p.pattern.map(s => s.type === 'coach'
+              ? `<span class="tag coach">🎓 Treinador</span>`
+              : (s.position
+                  ? `<span class="tag">${escapeHtml(s.position)}</span>`
+                  : `<span class="tag any">Qualquer</span>`)
+            ).join('')}
+          </div>
+        </div>
+      `).join('')}
+    </div>
+    <button type="button" class="rounds-detail-toggle" id="rounds-toggle">
+      ${showRoundsDetail ? '▲ Ocultar detalhes' : '▼ Ver rodada por rodada (' + rounds.length + ')'}
+    </button>
+    <div class="rounds-detail" id="rounds-detail" ${showRoundsDetail ? '' : 'hidden'}>
+      ${rounds.map((r,i)=>`
+        <div class="round-row-mini">
+          <span class="rnum-mini">#${i+1}</span>
+          <div class="rslots-mini">
+            ${r.slots.map(s => s.type === 'coach'
+              ? `<span class="tag coach">🎓 Treinador</span>`
+              : (s.position
+                  ? `<span class="tag">${escapeHtml(s.position)}</span>`
+                  : `<span class="tag any">Qualquer posição</span>`)
+            ).join('')}
+          </div>
+          <span class="rnote">${r.slots.length} slot(s)</span>
+        </div>
+      `).join('')}
+    </div>
+  `;
+  const toggle = container.querySelector('#rounds-toggle');
+  toggle.addEventListener('click', ()=>{
+    showRoundsDetail = !showRoundsDetail;
+    renderRoundsPreview();
+  });
+}
+function renderNovoDraft(){
+  renderTeamsConfigList();
+  renderPresetPositionsList();
+  renderRoundsPreview();
+  updateGeneralInfo();
+}
+function setupNovoDraftView(){
+  document.getElementById('nd-times').addEventListener('input', ()=>{ renderTeamsConfigList(); renderRoundsPreview(); });
+  document.getElementById('nd-elenco').addEventListener('input', ()=>{ updatePresetSummary(); renderRoundsPreview(); updateGeneralInfo(); });
+  document.getElementById('nd-picks-por-rodada').addEventListener('input', ()=>{ renderRoundsPreview(); updateGeneralInfo(); });
+  document.getElementById('nd-coaches').addEventListener('input', ()=>{ renderRoundsPreview(); updateGeneralInfo(); });
+  document.getElementById('nd-limpar').addEventListener('click', ()=>{
+    if(!confirm('Limpar o formulário de novo draft?')) return;
+    document.getElementById('nd-nome').value = '';
+    document.getElementById('nd-times').value = '8';
+    document.getElementById('nd-elenco').value = '23';
+    document.getElementById('nd-picks-por-rodada').value = '1';
+    document.getElementById('nd-coaches').value = '1';
+    document.getElementById('nd-snake').checked = true;
+    presetModel = [];
+    showRoundsDetail = false;
+    renderNovoDraft();
+  });
+  document.getElementById('nd-criar').addEventListener('click', async ()=>{
+    const name = document.getElementById('nd-nome').value.trim() || 'Draft sem nome';
+    const numTeams = Math.max(2, parseInt(document.getElementById('nd-times').value || '0', 10));
+    const elenco = Math.max(1, parseInt(document.getElementById('nd-elenco').value || '0', 10));
+    const picksPorRodada = Math.max(1, parseInt(document.getElementById('nd-picks-por-rodada').value || '1', 10));
+    const coachesPerTeam = Math.max(0, parseInt(document.getElementById('nd-coaches').value || '0', 10));
+    const snake = document.getElementById('nd-snake').checked;
+    const teamNames = [...document.querySelectorAll('.team-name-input')].map((inp,i)=> inp.value.trim() || ('Time ' + (i+1)));
+    const totalDistribuido = presetModel.reduce((s,m)=>s+m.qty, 0);
+    if(distinctPositions().length === 0 && playersOnly().length === 0){
+      if(!confirm('Você não tem jogadores cadastrados. Criar o draft mesmo assim?')) return;
+    } else if(totalDistribuido !== elenco){
+      const msg = totalDistribuido < elenco
+        ? `O modelo distribui ${totalDistribuido} de ${elenco} jogadores. As ${elenco - totalDistribuido} vagas restantes serão "Qualquer posição". Continuar?`
+        : `O modelo distribui ${totalDistribuido} jogadores, mas o elenco é ${elenco}. Reduzir para ${elenco}?`;
+      if(!confirm(msg)) return;
+    }
+    const existing = drafts.find(d => d.name === name);
+    if(existing && !confirm(`Já existe um draft chamado "${name}". Criar outro mesmo assim?`)) return;
+    const roundRules = generateRoundRules();
+    const draft = {
+      id: uid(), name, createdAt: Date.now(),
+      teams: teamNames.map(n=>({name:n})),
+      rounds: roundRules.length,
+      playersPerTeam: elenco, coachesPerTeam, picksPerRound: picksPorRodada, snake,
+      roundRules, picks: [], currentPickIndex: 0, formations: {}
+    };
+    drafts.push(draft);
+    await saveDrafts();
+    currentDraftId = draft.id;
+    currentTimesDraftId = draft.id;
+    currentTimesTeamIndex = 0;
+    document.querySelectorAll('.nav-item').forEach(i=>i.classList.remove('active'));
+    document.querySelector('.nav-item[data-tab="draft"]').classList.add('active');
+    ['jogadores','novo','draft','times'].forEach(t=>{ document.getElementById('view-'+t).hidden = (t !== 'draft'); });
+    currentTab = 'draft';
+    selectedSlots = []; slotSearchTerms = []; collapsedGroups = {};
+    renderDraftTab();
+  });
+}
+
+/* ==================== DRAFT AO VIVO ==================== */
+function draftedIdsOf(draft){
+  const s = new Set();
+  draft.picks.forEach(pk => pk.players.forEach(pl => s.add(pl.id)));
+  return s;
+}
+function teamPlayerCount(draft, teamIndex){
+  let n = 0;
+  draft.picks.forEach(pk => { if(pk.teamIndex === teamIndex) pk.players.forEach(p => { if((p.type||'player') !== 'coach') n++; }); });
+  return n;
+}
+function teamCoachCount(draft, teamIndex){
+  let n = 0;
+  draft.picks.forEach(pk => { if(pk.teamIndex === teamIndex) pk.players.forEach(p => { if(p.type === 'coach') n++; }); });
+  return n;
+}
+function computeCurrentSlot(draft){
+  const total = draft.rounds * draft.teams.length;
+  if(draft.currentPickIndex >= total) return null;
+  const round = Math.floor(draft.currentPickIndex / draft.teams.length);
+  const posInRound = draft.currentPickIndex % draft.teams.length;
+  const teamIndex = (draft.snake && round % 2 === 1) ? (draft.teams.length - 1 - posInRound) : posInRound;
+  return {round, teamIndex, total};
+}
+function renderBoardGrid(draft, highlightIndex){
+  const total = draft.rounds * draft.teams.length;
+  const highlightSlot = (highlightIndex !== null && highlightIndex < total) ? computeCurrentSlot(draft) : null;
+  let rows = '';
+  for(let r=0;r<draft.rounds;r++){
+    let cells = '';
+    for(let t=0;t<draft.teams.length;t++){
+      const pick = draft.picks.find(pk => pk.round === r && pk.teamIndex === t);
+      const isCurrent = highlightSlot && highlightSlot.round === r && highlightSlot.teamIndex === t;
+      let content = '<span style="color:var(--muted);">—</span>';
+      if(pick){
+        const players = pick.players.filter(p=>(p.type||'player') !== 'coach');
+        const coaches = pick.players.filter(p=>p.type === 'coach');
+        content = players.map(pl=>`<div>${escapeHtml(pl.name)} <span class="rp">(${escapeHtml(pl.position)})</span></div>`).join('');
+        if(coaches.length) content += coaches.map(c=>`<div class="coach-line">${escapeHtml(c.name)} (Treinador)</div>`).join('');
+      }
+      cells += `<td class="board-cell${isCurrent?' current':''}">${content}</td>`;
+    }
+    rows += `<tr><th>#${r+1}</th>${cells}</tr>`;
+  }
+  return `<div class="board-wrap"><table class="board-table">
+    <thead><tr><th></th>${draft.teams.map(t=>`<th>${escapeHtml(t.name)}</th>`).join('')}</tr></thead>
+    <tbody>${rows}</tbody>
+  </table></div>`;
+}
+function populateDraftSelect(){
+  const sel = document.getElementById('dr-select');
+  if(drafts.length === 0){ sel.innerHTML = '<option value="">Nenhum draft criado</option>'; return; }
+  sel.innerHTML = drafts.map(d=>{
+    const total = d.rounds * d.teams.length;
+    const status = d.currentPickIndex >= total ? 'Finalizado' : `${d.currentPickIndex}/${total}`;
+    return `<option value="${d.id}">${escapeHtml(d.name)} — ${status}</option>`;
+  }).join('');
+  if(!currentDraftId || !drafts.find(d=>d.id===currentDraftId)) currentDraftId = drafts[drafts.length-1].id;
+  sel.value = currentDraftId;
+}
+function renderDraftProgress(draft){
+  const total = draft.rounds * draft.teams.length;
+  const done = draft.currentPickIndex;
+  const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+  return `
+    <div class="draft-progress">
+      <div class="dp-item">
+        <span class="dp-label">Progresso</span>
+        <span class="dp-value${pct >= 100 ? ' full' : ''}"><b>${done}</b>/${total}</span>
+      </div>
+      <div class="dp-bar">
+        <div class="dp-bar-track">
+          <div class="dp-bar-fill${pct >= 100 ? ' full' : ''}" style="width:${pct}%"></div>
+        </div>
+      </div>
+      <div class="dp-item">
+        <span class="dp-label">Times</span>
+        <span class="dp-value">${draft.teams.length}</span>
+      </div>
+      <div class="dp-item">
+        <span class="dp-label">Rodada atual</span>
+        <span class="dp-value">${Math.min(draft.rounds, Math.floor(done / draft.teams.length) + 1)}<span style="font-size:14px;color:var(--muted);">/${draft.rounds}</span></span>
+      </div>
+      <div class="dp-item">
+        <span class="dp-label">Picks/rodada</span>
+        <span class="dp-value">${draft.picksPerRound || 1}</span>
+      </div>
+    </div>
+  `;
+}
+function renderDraftTab(){
+  populateDraftSelect();
+  const body = document.getElementById('draft-live-body');
+  if(drafts.length === 0){
+    body.innerHTML = '<div class="empty-state">Nenhum draft criado ainda. Vá em "Novo draft" para configurar, ou importe um JSON.</div>';
+    return;
+  }
+  const draft = drafts.find(d=>d.id === currentDraftId);
+  const total = draft.rounds * draft.teams.length;
+  if(draft.currentPickIndex >= total){
+    body.innerHTML = `
+      ${renderDraftProgress(draft)}
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
+          <div>
+            <span class="status-badge finalizado">Draft finalizado</span>
+            <p style="color:var(--muted);margin-top:10px;">Todas as ${total} picks foram feitas.</p>
+          </div>
+          <button type="button" class="btn btn-primary" id="draft-goto-times">Ver Times →</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Picks (${draft.picks.length})</div>
+        <div class="picks-log" id="picks-log"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Board completo</div>
+        ${renderBoardGrid(draft, null)}
+      </div>
+    `;
+    renderPicksLog(draft, body.querySelector('#picks-log'));
+    const gtBtn = body.querySelector('#draft-goto-times');
+    if(gtBtn){
+      gtBtn.addEventListener('click', ()=>{
+        document.querySelectorAll('.nav-item').forEach(i=>i.classList.remove('active'));
+        document.querySelector('.nav-item[data-tab="times"]').classList.add('active');
+        ['jogadores','novo','draft','times'].forEach(t=>{ document.getElementById('view-'+t).hidden = (t !== 'times'); });
+        currentTab = 'times';
+        currentTimesDraftId = draft.id;
+        renderTimesTab();
+      });
+    }
+    return;
+  }
+  const slot = computeCurrentSlot(draft);
+  const team = draft.teams[slot.teamIndex];
+  const roundRule = draft.roundRules[slot.round];
+  const slotsNeeded = roundRule.slots;
+  const drafted = draftedIdsOf(draft);
+  if(selectedSlots.length !== slotsNeeded.length) selectedSlots = new Array(slotsNeeded.length).fill(null);
+  if(slotSearchTerms.length !== slotsNeeded.length) slotSearchTerms = new Array(slotsNeeded.length).fill('');
+  const elenco = draft.playersPerTeam || draft.rounds;
+  const coachesPerTeam = draft.coachesPerTeam || 0;
+  const takenP = teamPlayerCount(draft, slot.teamIndex);
+  const takenC = teamCoachCount(draft, slot.teamIndex);
+  const roundHasCoach = slotsNeeded.some(s=>s.type === 'coach');
+
+  body.innerHTML = `
+    ${renderDraftProgress(draft)}
+    <div class="card">
+      <div class="onclock">
+        <div>
+          <div class="meta">Pick ${draft.currentPickIndex+1} de ${total} · Rodada ${slot.round+1} de ${draft.rounds}${roundHasCoach ? ' · 🎓 treinador' : ''}</div>
+          <div class="team-name">${escapeHtml(team.name)}</div>
+        </div>
+        <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+          <div class="team-progress${takenP >= elenco ? ' full' : ''}">Jogadores: <b>${takenP}</b> / ${elenco}</div>
+          ${coachesPerTeam > 0 ? `<div class="team-progress${takenC >= coachesPerTeam ? ' full' : ''}">Treinador: <b>${takenC}</b> / ${coachesPerTeam}</div>` : ''}
+          <div class="need-badge">Precisa preencher <b>${slotsNeeded.length}</b> slot(s)</div>
+        </div>
+      </div>
+      <div class="slots-wrap" id="slots-wrap"></div>
+      <div class="btn-row" style="margin-top:14px;">
+        <button class="btn btn-primary" id="confirm-pick" type="button" disabled>Confirmar pick</button>
+        <button class="btn btn-ghost" id="clear-selection" type="button">Limpar seleção</button>
+        <button class="btn btn-ghost" id="undo-last" type="button" ${draft.picks.length === 0 ? 'disabled' : ''}>Desfazer último pick</button>
+        <span id="pick-status" style="align-self:center;color:var(--muted);font-size:13px;"></span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Últimos picks</div>
+      <div class="picks-log" id="picks-log"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Board do draft</div>
+      ${renderBoardGrid(draft, draft.currentPickIndex)}
+    </div>
+  `;
+  renderPicksLog(draft, body.querySelector('#picks-log'));
+
+  function chosenIdsSet(){
+    const s = new Set();
+    selectedSlots.forEach(id => { if(id) s.add(id); });
+    return s;
+  }
+  function renderSlots(){
+    const wrap = document.getElementById('slots-wrap');
+    const chosenIds = chosenIdsSet();
+    wrap.innerHTML = slotsNeeded.map((s, idx)=>{
+      const chosenId = selectedSlots[idx];
+      const chosenItem = chosenId ? items.find(p=>p.id===chosenId) : null;
+      const isCoachSlot = s.type === 'coach';
+      const needPos = s.position;
+      const searchTerm = (slotSearchTerms[idx] || '').trim().toLowerCase();
+      const baseCandidates = items.filter(p=>{
+        if(drafted.has(p.id)) return false;
+        if(chosenIds.has(p.id) && p.id !== chosenId) return false;
+        if(isCoachSlot){ if(!isCoach(p)) return false; }
+        else { if(!isPlayer(p)) return false; if(needPos && p.position !== needPos) return false; }
+        return true;
+      });
+      const filtered = searchTerm ? baseCandidates.filter(p => p.name.toLowerCase().includes(searchTerm)) : baseCandidates;
+      const groups = {};
+      filtered.forEach(p=>{
+        const key = isCoachSlot ? 'Treinador' : (p.position || 'Sem posição');
+        if(!groups[key]) groups[key] = [];
+        groups[key].push(p);
+      });
+      const groupKeys = Object.keys(groups).sort((a,b)=>a.localeCompare(b));
+      const defaultCollapsed = !needPos && !isCoachSlot;
+      if(collapsedGroups[idx] === undefined) collapsedGroups[idx] = defaultCollapsed ? new Set(groupKeys) : new Set();
+      const collapsed = collapsedGroups[idx];
+      const showToggleAll = groupKeys.length > 1;
+      const groupsHtml = groupKeys.map(gk=>{
+        const list = groups[gk];
+        const isCollapsed = collapsed.has(gk);
+        const isCoachGroup = isCoachSlot || gk === 'Treinador';
+        return `<div class="pos-group${isCollapsed ? ' collapsed' : ''}">
+          <div class="pos-group-head" data-toggle-group="${escapeHtml(gk)}" data-slot-idx="${idx}">
+            <span class="pos-group-title${isCoachGroup ? ' coach' : ''}"><span class="caret">▼</span>${escapeHtml(gk)}</span>
+            <span class="pos-group-count">${list.length}</span>
+          </div>
+          <div class="pos-group-body">
+            ${list.map(p=>`
+              <button type="button" class="player-chip small${chosenId===p.id?' selected':''}${isCoach(p)?' coach-chip':''}" data-pid="${p.id}" data-slot="${idx}">
+                ${chipPhotoHtml(p)}
+                ${escapeHtml(p.name)}${isCoach(p) ? '' : ` <span class="pos">${escapeHtml(p.position)}</span>`}
+              </button>
+            `).join('')}
+          </div>
+        </div>`;
+      }).join('');
+      const lockBadge = (!isCoachSlot && needPos) ? `<span class="lock-badge">🔒 apenas ${escapeHtml(needPos)}</span>` : '';
+      return `<div class="pick-slot${chosenItem ? ' filled' : ''}${isCoachSlot ? ' coach-slot' : ''}">
+        <div class="pick-slot-head">
+          <span class="pick-slot-label">
+            Slot ${idx+1}: ${isCoachSlot
+              ? `<span class="needpos">Treinador</span>`
+              : (needPos ? `<span class="needpos">${escapeHtml(needPos)}</span>` : `<span class="anyslot">Qualquer posição</span>`)}
+            ${lockBadge}
+          </span>
+          ${chosenItem ? `<span class="pick-slot-chosen">✓ ${escapeHtml(chosenItem.name)} <button type="button" class="clear-btn" data-clear-slot="${idx}">remover</button></span>` : ''}
+        </div>
+        <div class="slot-filter-bar">
+          <input type="text" class="slot-search" placeholder="Buscar por nome..." data-search-slot="${idx}" value="${escapeHtml(slotSearchTerms[idx] || '')}">
+          ${showToggleAll ? `<button type="button" class="slot-toggle-all" data-toggle-all="${idx}">${collapsed.size === groupKeys.length ? 'Expandir tudo' : 'Recolher tudo'}</button>` : ''}
+        </div>
+        <div class="pos-groups">
+          ${groupKeys.length === 0
+            ? `<span style="color:var(--muted);font-size:12.5px;">${chosenItem ? 'Nenhum outro candidato.' : (isCoachSlot ? 'Nenhum treinador disponível.' : 'Nenhum jogador disponível.')}</span>`
+            : groupsHtml}
+        </div>
+      </div>`;
+    }).join('');
+    wrap.querySelectorAll('.player-chip').forEach(chip=>{
+      chip.addEventListener('click', ()=>{
+        const pid = chip.dataset.pid;
+        const slotIdx = parseInt(chip.dataset.slot, 10);
+        if(selectedSlots[slotIdx] === pid) selectedSlots[slotIdx] = null;
+        else {
+          for(let i=0;i<selectedSlots.length;i++) if(i !== slotIdx && selectedSlots[i] === pid) selectedSlots[i] = null;
+          selectedSlots[slotIdx] = pid;
+        }
+        renderSlots(); updateConfirmState();
+      });
+    });
+    wrap.querySelectorAll('.slot-search').forEach(inp=>{
+      inp.addEventListener('input', ()=>{
+        const idx = parseInt(inp.dataset.searchSlot, 10);
+        slotSearchTerms[idx] = inp.value;
+        delete collapsedGroups[idx];
+        renderSlots();
+        const again = wrap.querySelector(`.slot-search[data-search-slot="${idx}"]`);
+        if(again){ again.focus(); const v = again.value; again.setSelectionRange(v.length, v.length); }
+        updateConfirmState();
+      });
+    });
+    wrap.querySelectorAll('.pos-group-head').forEach(head=>{
+      head.addEventListener('click', ()=>{
+        const idx = parseInt(head.dataset.slotIdx, 10);
+        const gk = head.dataset.toggleGroup;
+        if(!collapsedGroups[idx]) collapsedGroups[idx] = new Set();
+        if(collapsedGroups[idx].has(gk)) collapsedGroups[idx].delete(gk);
+        else collapsedGroups[idx].add(gk);
+        renderSlots(); updateConfirmState();
+      });
+    });
+    wrap.querySelectorAll('.slot-toggle-all').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const idx = parseInt(btn.dataset.toggleAll, 10);
+        const slotEl = btn.closest('.pick-slot');
+        const heads = slotEl.querySelectorAll('.pos-group-head');
+        const allKeys = [...heads].map(h=>h.dataset.toggleGroup);
+        if(!collapsedGroups[idx]) collapsedGroups[idx] = new Set();
+        const isAllCollapsed = allKeys.every(k => collapsedGroups[idx].has(k));
+        collapsedGroups[idx] = isAllCollapsed ? new Set() : new Set(allKeys);
+        renderSlots(); updateConfirmState();
+      });
+    });
+    wrap.querySelectorAll('[data-clear-slot]').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const idx = parseInt(btn.dataset.clearSlot, 10);
+        selectedSlots[idx] = null; renderSlots(); updateConfirmState();
+      });
+    });
+  }
+  function updateConfirmState(){
+    const btn = document.getElementById('confirm-pick');
+    const status = document.getElementById('pick-status');
+    const filled = selectedSlots.filter(Boolean).length;
+    btn.disabled = filled !== slotsNeeded.length;
+    status.textContent = `${filled} de ${slotsNeeded.length} slot(s) preenchido(s)`;
+  }
+  renderSlots();
+  updateConfirmState();
+  document.getElementById('confirm-pick').addEventListener('click', async ()=>{
+    const btn = document.getElementById('confirm-pick');
+    btn.disabled = true;
+    const latestDrafts = await storageGet('drafts');
+    const latestDraft = latestDrafts ? latestDrafts.find(d => d.id === draft.id) : null;
+    if(!latestDraft || latestDraft.currentPickIndex !== draft.currentPickIndex){
+      if(latestDrafts) drafts = latestDrafts;
+      selectedSlots = []; slotSearchTerms = []; collapsedGroups = {};
+      renderDraftTab(); return;
+    }
+    const chosen = selectedSlots.map(pid => items.find(p=>p.id===pid)).filter(Boolean)
+      .map(p=>({id:p.id, type:p.type||'player', name:p.name, position:p.position||'', photo:p.photo||null}));
+    latestDraft.picks.push({round: slot.round, teamIndex: slot.teamIndex, players: chosen});
+    latestDraft.currentPickIndex++;
+    drafts = latestDrafts;
+    selectedSlots = []; slotSearchTerms = []; collapsedGroups = {};
+    await saveDrafts();
+    renderDraftTab();
+  });
+  document.getElementById('clear-selection').addEventListener('click', ()=>{
+    selectedSlots = new Array(slotsNeeded.length).fill(null);
+    renderSlots(); updateConfirmState();
+  });
+  document.getElementById('undo-last').addEventListener('click', async ()=>{
+    if(draft.picks.length === 0) return;
+    if(!confirm('Desfazer o último pick?')) return;
+    const latestDrafts = await storageGet('drafts');
+    const latestDraft = latestDrafts ? latestDrafts.find(d => d.id === draft.id) : null;
+    if(!latestDraft){ renderDraftTab(); return; }
+    latestDraft.picks.pop();
+    latestDraft.currentPickIndex = Math.max(0, latestDraft.currentPickIndex - 1);
+    drafts = latestDrafts;
+    selectedSlots = []; slotSearchTerms = []; collapsedGroups = {};
+    await saveDrafts();
+    renderDraftTab();
+  });
+}
+function renderPicksLog(draft, container){
+  if(!container) return;
+  if(draft.picks.length === 0){ container.innerHTML = '<div class="empty-state small">Nenhum pick feito ainda.</div>'; return; }
+  const recent = draft.picks.slice().reverse().slice(0, 20);
+  container.innerHTML = recent.map(pk=>{
+    const team = draft.teams[pk.teamIndex];
+    const players = pk.players.map(p=>{
+      const cls = p.type === 'coach' ? 'pl-coach' : '';
+      const pos = p.position ? ` (${p.position})` : '';
+      return `<span class="${cls}">${escapeHtml(p.name)}${escapeHtml(pos)}</span>`;
+    }).join(', ');
+    return `<div class="pick-log-item">
+      <span class="pl-round">R${pk.round+1}</span>
+      <div class="pl-info">
+        <span class="pl-team">${escapeHtml(team?.name || '?')}</span>
+        <span class="pl-players">${players}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+function setupDraftView(){
+  document.getElementById('dr-select').addEventListener('change', (e)=>{
+    currentDraftId = e.target.value;
+    selectedSlots = []; slotSearchTerms = []; collapsedGroups = {};
+    renderDraftTab();
+  });
+  document.getElementById('dr-export').addEventListener('click', ()=>{
+    if(drafts.length === 0) return;
+    const draft = drafts.find(d=>d.id === currentDraftId);
+    if(draft) exportDraft(draft);
+  });
+  const importFile = document.getElementById('dr-import-file');
+  document.getElementById('dr-import').addEventListener('click', ()=> importFile.click());
+  importFile.addEventListener('change', (e)=>{
+    const file = e.target.files && e.target.files[0];
+    importFile.value = '';
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = ()=>{
+      const status = document.createElement('div');
+      status.style.cssText = 'color:var(--muted);font-size:12.5px;margin-top:10px;';
+      const header = document.querySelector('#view-draft .draft-actions');
+      const old = header.querySelector('.import-status'); if(old) old.remove();
+      status.className = 'import-status';
+      header.appendChild(status);
+      importDraftFromJson(String(reader.result || ''), status);
+    };
+    reader.onerror = ()=>{ alert('Falha ao ler o arquivo.'); };
+    reader.readAsText(file, 'utf-8');
+  });
+  document.getElementById('dr-import-paste').addEventListener('click', ()=>{
+    const backdrop = document.createElement('div');
+    backdrop.className = 'modal-backdrop';
+    backdrop.innerHTML = `
+      <div class="modal">
+        <h3>Colar JSON do draft</h3>
+        <p>Cole abaixo o conteúdo do arquivo <code>.json</code> exportado.</p>
+        <textarea class="json-box" id="import-json" placeholder='{"_meta":{...},"draft":{...}}'></textarea>
+        <div class="btn-row" style="margin-top:10px;">
+          <button type="button" class="btn btn-primary" id="import-confirm">Importar</button>
+          <button type="button" class="btn btn-ghost" id="import-cancel">Cancelar</button>
+        </div>
+        <div id="import-status" style="color:var(--muted);font-size:12.5px;margin-top:10px;"></div>
+      </div>
+    `;
+    document.body.appendChild(backdrop);
+    function close(){ document.body.removeChild(backdrop); }
+    backdrop.addEventListener('click', (e)=>{ if(e.target === backdrop) close(); });
+    backdrop.querySelector('#import-cancel').addEventListener('click', close);
+    backdrop.querySelector('#import-confirm').addEventListener('click', ()=>{
+      const text = backdrop.querySelector('#import-json').value;
+      const status = backdrop.querySelector('#import-status');
+      if(!text.trim()){ status.innerHTML = '<span style="color:var(--red);">Cole o JSON antes.</span>'; return; }
+      close();
+      const outerStatus = document.createElement('div');
+      outerStatus.style.cssText = 'color:var(--muted);font-size:12.5px;margin-top:10px;';
+      const header = document.querySelector('#view-draft .draft-actions');
+      const old = header.querySelector('.import-status'); if(old) old.remove();
+      outerStatus.className = 'import-status';
+      header.appendChild(outerStatus);
+      importDraftFromJson(text, outerStatus);
+    });
+    setTimeout(()=> backdrop.querySelector('#import-json').focus(), 50);
+  });
+}
+
+/* ==================== TIMES + CAMPO ==================== */
+function populateTimesSelect(){
+  const sel = document.getElementById('tm-select');
+  if(drafts.length === 0){ sel.innerHTML = '<option value="">Nenhum draft criado</option>'; return; }
+  sel.innerHTML = drafts.map(d=>`<option value="${d.id}">${escapeHtml(d.name)}</option>`).join('');
+  if(!currentTimesDraftId || !drafts.find(d=>d.id===currentTimesDraftId)){
+    currentTimesDraftId = drafts[drafts.length-1].id;
+    currentTimesTeamIndex = 0;
+  }
+  sel.value = currentTimesDraftId;
+}
+
+const PITCH_MARKINGS = `
+  <div class="pl-halfway"></div>
+  <div class="pl-circle"></div>
+  <div class="pl-spot" style="left:50%;top:50%;"></div>
+  <div class="pl-box-top"></div>
+  <div class="pl-box-bottom"></div>
+  <div class="pl-goalarea-top"></div>
+  <div class="pl-goalarea-bottom"></div>
+`;
+
+function ensureFormationState(draft, teamIndex){
+  if(!draft.formations) draft.formations = {};
+  if(!draft.formations[teamIndex]) draft.formations[teamIndex] = { formation: '4-4-2', positions: {} };
+  const f = draft.formations[teamIndex];
+  if(!f.formation) f.formation = '4-4-2';
+  if(!f.positions || typeof f.positions !== 'object') f.positions = {};
+  if(f.pitch && typeof f.pitch === 'object' && Object.keys(f.positions).length === 0){
+    const teamPlayers = getTeamPlayers(draft, teamIndex);
+    const slots = buildFormationSlots(f.formation);
+    teamPlayers.forEach((p, i)=>{ if(slots[i]) f.positions[p.id] = { x: slots[i].x, y: slots[i].y }; });
+    delete f.pitch;
+  }
+  return f;
+}
+function getTeamPlayers(draft, teamIndex){
+  const out = [];
+  draft.picks.filter(pk => pk.teamIndex === teamIndex).sort((a,b)=> a.round - b.round)
+    .forEach(pk=>{ pk.players.forEach(pl=>{ if(pl.type !== 'coach') out.push(pl); }); });
+  return out;
+}
+function getTeamCoaches(draft, teamIndex){
+  const out = [];
+  draft.picks.filter(pk => pk.teamIndex === teamIndex).sort((a,b)=> a.round - b.round)
+    .forEach(pk=>{ pk.players.forEach(pl=>{ if(pl.type === 'coach') out.push(pl); }); });
+  return out;
+}
+function applyFormationToTeam(draft, teamIndex, formationName, force){
+  const f = ensureFormationState(draft, teamIndex);
+  const teamPlayers = getTeamPlayers(draft, teamIndex);
+  const slots = buildFormationSlots(formationName);
+  if(slots.length === 0) return;
+  const positionToRole = (pos)=>{
+    const p = String(pos||'').toUpperCase();
+    if(/GOL|GOALKEEP|GOLEIRO|GK/.test(p)) return 'GOL';
+    if(/ZAG|DEF|LATERAL|LAT|BACK|CB|LB|RB/.test(p)) return 'DEF';
+    if(/VOL|MEI|MID|MC|CAM|CM|DM/.test(p)) return 'MEI';
+    if(/ATA|PONTA|ST|CF|RW|LW|FW|ATAC/.test(p)) return 'ATA';
+    return null;
+  };
+  if(force){
+    const available = teamPlayers.slice();
+    const newPositions = {};
+    slots.forEach(slot=>{
+      const idx = available.findIndex(p => positionToRole(p.position) === slot.role);
+      if(idx >= 0){
+        const p = available.splice(idx, 1)[0];
+        newPositions[p.id] = { x: slot.x, y: slot.y };
+      }
+    });
+    slots.forEach(slot=>{
+      if(available.length === 0) return;
+      const p = available.shift();
+      if(!newPositions[p.id]) newPositions[p.id] = { x: slot.x, y: slot.y };
+    });
+    f.positions = newPositions;
+  } else {
+    const withoutPos = teamPlayers.filter(p => !f.positions[p.id]);
+    const freeSlots = slots.filter(s => !Object.keys(f.positions).some(pid => {
+      const pos = f.positions[pid];
+      return Math.abs(pos.x - s.x) < 1 && Math.abs(pos.y - s.y) < 1;
+    }));
+    withoutPos.forEach(p=>{
+      const idx = freeSlots.findIndex(s => positionToRole(p.position) === s.role);
+      if(idx >= 0){
+        const s = freeSlots.splice(idx, 1)[0];
+        f.positions[p.id] = { x: s.x, y: s.y };
+      } else if(freeSlots.length > 0){
+        const s = freeSlots.shift();
+        f.positions[p.id] = { x: s.x, y: s.y };
+      }
+    });
+  }
+  f.formation = formationName;
+}
+function pruneFormation(draft, teamIndex){
+  const f = ensureFormationState(draft, teamIndex);
+  const ids = new Set(getTeamPlayers(draft, teamIndex).map(p=>p.id));
+  Object.keys(f.positions).forEach(pid=>{ if(!ids.has(pid)) delete f.positions[pid]; });
+}
+
+/* ============ RENDER PITCH: FOTO + NOME ============ */
+function renderPitch(draft, teamIndex, teamPlayers){
+  const f = ensureFormationState(draft, teamIndex);
+  const tokensHtml = teamPlayers.map(p=>{
+    const pos = f.positions[p.id];
+    if(!pos) return '';
+    const isSelected = pitchEditState.teamIndex === teamIndex && pitchEditState.selectedPlayerId === p.id;
+    const hasPhoto = !!(p.photo && String(p.photo).trim());
+    const classes = ['pitch-token'];
+    if(isSelected) classes.push('selected');
+    if(p.type === 'coach') classes.push('coach-token');
+    if(!hasPhoto) classes.push('no-photo');
+
+    // O círculo do avatar contém:
+    // - Se tiver foto: <img> por cima + iniciais atrás (fallback caso a img falhe)
+    // - Se não tiver: só iniciais
+    // O nome do jogador fica SEMPRE abaixo, na div .token-name
+    const initialsTxt = escapeHtml(initials(p.name));
+    const photoUrl = hasPhoto ? escapeHtml(p.photo) : '';
+
+    let avatarInner;
+    if(hasPhoto){
+      // Iniciais ficam atrás, e a img fica por cima. Se a img falhar, esconde ela
+      // e as iniciais aparecem (ficam no z-index 1, abaixo).
+      avatarInner =
+        `<span class="token-initials">${initialsTxt}</span>` +
+        `<img class="token-photo" src="${photoUrl}" alt="${escapeHtml(p.name)}" loading="lazy" ` +
+        `onerror="this.style.display='none';" />`;
+    } else {
+      avatarInner = `<span class="token-initials">${initialsTxt}</span>`;
+    }
+
+    return `<div class="${classes.join(' ')}" style="left:${pos.x}%;top:${pos.y}%;" data-player-id="${p.id}" data-team="${teamIndex}">
+      <div class="token-avatar">${avatarInner}</div>
+      <div class="token-name">${escapeHtml(p.name)}</div>
+      <button type="button" class="token-remove" data-remove-player="${p.id}" title="Remover do campo">×</button>
+    </div>`;
+  }).join('');
+  return `<div class="pitch" id="pitch-${teamIndex}" data-team="${teamIndex}">
+    ${PITCH_MARKINGS}
+    ${tokensHtml}
+  </div>`;
+}
+
+function renderBench(draft, teamIndex, teamPlayers){
+  const f = ensureFormationState(draft, teamIndex);
+  const onFieldIds = new Set(Object.keys(f.positions));
+  const benchPlayers = teamPlayers.filter(p => !onFieldIds.has(p.id));
+  const items = benchPlayers.map(p=>{
+    const sel = pitchEditState.teamIndex === teamIndex && pitchEditState.selectedPlayerId === p.id;
+    return `<button type="button" class="bench-item${sel?' selected':''}" data-bench-pid="${p.id}" data-team="${teamIndex}">
+      ${chipPhotoHtml(p)}
+      <span class="b-name">${escapeHtml(p.name)}</span>
+      <span class="b-pos">${escapeHtml(p.position)}</span>
+    </button>`;
+  }).join('');
+  return `<div class="bench">
+    <div class="bench-head"><h4>Banco</h4><span class="bench-count">${benchPlayers.length} jogador(es)</span></div>
+    <p style="color:var(--muted);font-size:11.5px;margin:0;">Clique em um jogador do banco para colocá-lo no campo. Depois arraste para posicionar.</p>
+    ${benchPlayers.length === 0 ? `<div class="bench-empty">Todos os jogadores estão no campo.</div>` : `<div class="bench-list">${items}</div>`}
+  </div>`;
+}
+function renderFormationPicker(draft, teamIndex){
+  const f = ensureFormationState(draft, teamIndex);
+  const positionsArr = Object.values(f.positions);
+  const detected = detectFormationFromPositions(positionsArr);
+  const isCustom = detected.name === 'personalizada';
+  const label = isCustom ? '— personalizada —' : detected.name;
+  const options = Object.keys(FORMATIONS).map(name =>
+    `<option value="${name}" ${name === f.formation && !isCustom ? 'selected' : ''}>${name}</option>`
+  ).join('');
+  return `<div class="pitch-toolbar">
+    <label for="formation-${teamIndex}">Formação:</label>
+    <select id="formation-${teamIndex}" data-formation-team="${teamIndex}">${options}</select>
+    <button type="button" class="btn btn-ghost" data-apply-formation="${teamIndex}" style="padding:6px 12px;font-size:12.5px;">Aplicar formação</button>
+    <button type="button" class="btn btn-ghost" data-autofill-team="${teamIndex}" style="padding:6px 12px;font-size:12.5px;">Auto-preencher</button>
+    <button type="button" class="btn btn-ghost" data-clearpitch-team="${teamIndex}" style="padding:6px 12px;font-size:12.5px;">Limpar campo</button>
+  </div>
+  <div class="formation-info">
+    <span class="fi-label">Formação detectada:</span>
+    <span class="fi-value">${escapeHtml(label)}</span>
+    <span class="fi-label" style="margin-left:auto;">${Object.keys(f.positions).length} no campo</span>
+  </div>`;
+}
+function renderCoachBox(draft, teamIndex){
+  const coachesPerTeam = draft.coachesPerTeam || 0;
+  if(coachesPerTeam === 0) return '';
+  const coaches = getTeamCoaches(draft, teamIndex);
+  const rows = [];
+  for(let i=0;i<coachesPerTeam;i++){
+    const c = coaches[i];
+    rows.push(`<div class="coach-box">
+      <span class="coach-label">🎓 Treinador ${i+1}</span>
+      <span class="coach-name${c?'':' empty'}">${c ? escapeHtml(c.name) : '— vaga em aberto —'}</span>
+    </div>`);
+  }
+  return rows.join('');
+}
+function renderTimesTab(){
+  populateTimesSelect();
+  const body = document.getElementById('times-body');
+  if(drafts.length === 0){ body.innerHTML = '<div class="empty-state">Nenhum draft criado ainda.</div>'; return; }
+  const draft = drafts.find(d=>d.id === currentTimesDraftId);
+  const elenco = draft.playersPerTeam || draft.rounds;
+  const coachesPerTeam = draft.coachesPerTeam || 0;
+  const numTeams = draft.teams.length;
+  if(currentTimesTeamIndex >= numTeams || currentTimesTeamIndex < 0) currentTimesTeamIndex = 0;
+
+  draft.teams.forEach((team, tIdx)=>{
+    const teamPlayers = getTeamPlayers(draft, tIdx);
+    const f = ensureFormationState(draft, tIdx);
+    pruneFormation(draft, tIdx);
+    const onField = Object.keys(f.positions).length;
+    if(onField === 0 && teamPlayers.length > 0){
+      applyFormationToTeam(draft, tIdx, f.formation || '4-4-2', true);
+    } else if(onField < Math.min(11, teamPlayers.length)){
+      applyFormationToTeam(draft, tIdx, f.formation || '4-4-2', false);
+    }
+  });
+
+  const tabsHtml = draft.teams.map((team, tIdx)=>{
+    const count = getTeamPlayers(draft, tIdx).length;
+    const active = tIdx === currentTimesTeamIndex;
+    return `<button type="button" class="team-tab${active?' active':''}" data-team-tab="${tIdx}">
+      <span class="tab-avatar">${escapeHtml(initials(team.name))}</span>
+      ${escapeHtml(team.name)}
+      <span class="tab-count">${count}/${elenco}</span>
+    </button>`;
+  }).join('');
+
+  const teamPanels = draft.teams.map((team, tIdx)=>{
+    if(tIdx !== currentTimesTeamIndex) return `<div class="team-panel" data-team-panel="${tIdx}" hidden></div>`;
+    const teamPlayers = getTeamPlayers(draft, tIdx);
+    const countP = teamPlayers.length;
+    const countC = getTeamCoaches(draft, tIdx).length;
+    const pitchHtml = renderPitch(draft, tIdx, teamPlayers);
+    const benchHtml = renderBench(draft, tIdx, teamPlayers);
+    const coachHtml = renderCoachBox(draft, tIdx);
+    return `<div class="team-panel" data-team-panel="${tIdx}">
+      <div class="card team-roster-card">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px;gap:10px;flex-wrap:wrap;">
+          <h3 style="margin:0;">${escapeHtml(team.name)}</h3>
+          <div style="display:flex;gap:12px;flex-wrap:wrap;">
+            <span class="team-progress${countP >= elenco ? ' full' : ''}">Jogadores: <b>${countP}</b> / ${elenco}</span>
+            ${coachesPerTeam > 0 ? `<span class="team-progress${countC >= coachesPerTeam ? ' full' : ''}">Treinador: <b>${countC}</b> / ${coachesPerTeam}</span>` : ''}
+          </div>
+        </div>
+        ${coachHtml}
+        ${renderFormationPicker(draft, tIdx)}
+        <div class="pitch-layout">
+          <div class="pitch-col">
+            <p class="pitch-hint">Arraste os jogadores livremente pelo campo. O nome fica abaixo da foto. Clique em × para tirar do campo.</p>
+            ${pitchHtml}
+          </div>
+          ${benchHtml}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  body.innerHTML = `<div class="team-tabs">${tabsHtml}</div>${teamPanels}`;
+  saveDrafts();
+  body.querySelectorAll('[data-team-tab]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      currentTimesTeamIndex = parseInt(btn.dataset.teamTab, 10);
+      pitchEditState = { teamIndex: null, selectedPlayerId: null };
+      renderTimesTab();
+    });
+  });
+  attachPitchHandlers(body, draft);
+}
+function attachPitchHandlers(container, draft){
+  const tIdx = currentTimesTeamIndex;
+  const f = ensureFormationState(draft, tIdx);
+
+  container.querySelectorAll('[data-apply-formation]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const t = parseInt(btn.dataset.applyFormation, 10);
+      const sel = container.querySelector(`[data-formation-team="${t}"]`);
+      if(!sel) return;
+      const formation = sel.value;
+      if(!confirm(`Aplicar a formação ${formation} e reposicionar todos os jogadores?`)) return;
+      applyFormationToTeam(draft, t, formation, true);
+      saveDrafts();
+      renderTimesTab();
+    });
+  });
+  container.querySelectorAll('[data-autofill-team]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const t = parseInt(btn.dataset.autofillTeam, 10);
+      const fT = ensureFormationState(draft, t);
+      applyFormationToTeam(draft, t, fT.formation || '4-4-2', true);
+      saveDrafts();
+      renderTimesTab();
+    });
+  });
+  container.querySelectorAll('[data-clearpitch-team]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const t = parseInt(btn.dataset.clearpitchTeam, 10);
+      const fT = ensureFormationState(draft, t);
+      fT.positions = {};
+      fT.formation = 'personalizada';
+      saveDrafts();
+      renderTimesTab();
+    });
+  });
+  container.querySelectorAll('[data-remove-player]').forEach(btn=>{
+    btn.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      const pid = btn.dataset.removePlayer;
+      const fT = ensureFormationState(draft, tIdx);
+      delete fT.positions[pid];
+      fT.formation = 'personalizada';
+      saveDrafts();
+      renderTimesTab();
+    });
+  });
+  container.querySelectorAll('[data-bench-pid]').forEach(el=>{
+    el.addEventListener('click', ()=>{
+      const pid = el.dataset.benchPid;
+      const fT = ensureFormationState(draft, tIdx);
+      if(fT.positions[pid]) return;
+      const slots = buildFormationSlots(fT.formation) || buildFormationSlots('4-4-2');
+      const occupied = Object.values(fT.positions);
+      const freeSlot = slots.find(s => !occupied.some(o => Math.abs(o.x-s.x)<1 && Math.abs(o.y-s.y)<1));
+      if(freeSlot){
+        fT.positions[pid] = { x: freeSlot.x, y: freeSlot.y };
+      } else {
+        fT.positions[pid] = { x: 50, y: 50 };
+      }
+      saveDrafts();
+      renderTimesTab();
+    });
+  });
+
+  const pitchEl = container.querySelector(`#pitch-${tIdx}`);
+  if(!pitchEl) return;
+
+  function setupDrag(tokenEl){
+    let startX = 0, startY = 0;
+    let startLeftPct = 0, startTopPct = 0;
+    let rect = null;
+    let moved = false;
+    let pointerId = null;
+
+    function onDown(e){
+      e.preventDefault();
+      e.stopPropagation();
+      pointerId = e.pointerId;
+      tokenEl.setPointerCapture(pointerId);
+      isDraggingToken = true;
+      moved = false;
+      const fT = ensureFormationState(draft, tIdx);
+      const pid = tokenEl.dataset.playerId;
+      const pos = fT.positions[pid] || { x: 50, y: 50 };
+      rect = pitchEl.getBoundingClientRect();
+      startX = e.clientX;
+      startY = e.clientY;
+      startLeftPct = pos.x;
+      startTopPct = pos.y;
+      tokenEl.classList.add('dragging');
+    }
+    function onMove(e){
+      if(e.pointerId !== pointerId) return;
+      const dx = e.clientX - startX;
+      const dy = e.clientY - startY;
+      if(Math.abs(dx) > 3 || Math.abs(dy) > 3) moved = true;
+      if(!rect) return;
+      let xPct = startLeftPct + (dx / rect.width) * 100;
+      let yPct = startTopPct + (dy / rect.height) * 100;
+      xPct = Math.max(4, Math.min(96, xPct));
+      yPct = Math.max(3, Math.min(97, yPct));
+      tokenEl.style.left = xPct + '%';
+      tokenEl.style.top = yPct + '%';
+    }
+    function onUp(e){
+      if(e.pointerId !== pointerId) return;
+      try { tokenEl.releasePointerCapture(pointerId); } catch(err) {}
+      tokenEl.classList.remove('dragging');
+      isDraggingToken = false;
+      const pid = tokenEl.dataset.playerId;
+      const fT = ensureFormationState(draft, tIdx);
+      const leftPct = parseFloat(tokenEl.style.left);
+      const topPct = parseFloat(tokenEl.style.top);
+      if(moved){
+        fT.positions[pid] = { x: leftPct, y: topPct };
+        const positionsArr = Object.values(fT.positions);
+        const detected = detectFormationFromPositions(positionsArr);
+        fT.formation = detected.name === 'personalizada' ? 'personalizada' : detected.name;
+        saveDrafts();
+        const fi = container.querySelector(`.team-panel[data-team-panel="${tIdx}"] .formation-info .fi-value`);
+        if(fi) fi.textContent = fT.formation === 'personalizada' ? '— personalizada —' : fT.formation;
+      } else {
+        if(pitchEditState.teamIndex === tIdx && pitchEditState.selectedPlayerId === pid){
+          pitchEditState = { teamIndex: null, selectedPlayerId: null };
+        } else {
+          pitchEditState = { teamIndex: tIdx, selectedPlayerId: pid };
+        }
+        container.querySelectorAll('.pitch-token').forEach(t=>t.classList.remove('selected'));
+        if(pitchEditState.selectedPlayerId === pid){ tokenEl.classList.add('selected'); }
+      }
+    }
+    tokenEl.addEventListener('pointerdown', onDown);
+    tokenEl.addEventListener('pointermove', onMove);
+    tokenEl.addEventListener('pointerup', onUp);
+    tokenEl.addEventListener('pointercancel', onUp);
+  }
+  pitchEl.querySelectorAll('.pitch-token').forEach(setupDrag);
+}
+function setupTimesView(){
+  document.getElementById('tm-select').addEventListener('change', (e)=>{
+    currentTimesDraftId = e.target.value;
+    currentTimesTeamIndex = 0;
+    pitchEditState = { teamIndex: null, selectedPlayerId: null };
+    renderTimesTab();
+  });
+}
+
+/* ==================== SYNC ==================== */
+async function pollForUpdates(){
+  if(isDraggingToken) return;
+  if(pendingWrites > 0) return;
+  if(dirtyLocal) return;
+  if(Date.now() - lastLocalWriteAt < SYNC_COOLDOWN_MS) return;
+  try{
+    const [freshItems, freshDrafts] = await Promise.all([storageGet('players'), storageGet('drafts')]);
+    if(pendingWrites > 0 || dirtyLocal || isDraggingToken) return;
+    if(Date.now() - lastLocalWriteAt < SYNC_COOLDOWN_MS) return;
+    if(freshItems === null && items.length > 0){ await saveItems(); return; }
+    if(freshDrafts === null && drafts.length > 0){ await saveDrafts(); return; }
+    const nextItems = freshItems === null ? [] : freshItems;
+    const nextDrafts = freshDrafts === null ? [] : freshDrafts;
+    const itemsChanged = JSON.stringify(nextItems) !== JSON.stringify(items);
+    const draftsChanged = JSON.stringify(nextDrafts) !== JSON.stringify(drafts);
+    if(!itemsChanged && !draftsChanged) return;
+    items = nextItems;
+    drafts = nextDrafts;
+    if(currentTab === 'jogadores'){ renderPosDatalist(); renderPlayersTable(); renderCoachesTable(); updateSubtabCounts(); }
+    else if(currentTab === 'draft') renderDraftTab();
+    else if(currentTab === 'times') renderTimesTab();
+  }catch(e){ console.error('Falha ao sincronizar', e); }
+}
+
+/* ==================== UTIL ==================== */
+function distinctPositions(){
+  return [...new Set(playersOnly().map(p => (p.position||'').trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
+}
+function escapeHtml(str){
+  return String(str).replace(/[&<>"']/g, ch => ({
+    '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'
+  }[ch]));
+}
+
+/* ==================== INIT ==================== */
+async function init(){
+  const p = await storageGet('players');
+  const d = await storageGet('drafts');
+  const rawItems = p === null ? [] : p;
+  items = rawItems.map(it => ({ ...it, type: it.type === 'coach' ? 'coach' : 'player' }));
+  drafts = d === null ? [] : d;
+  drafts.forEach(dr=>{ if(!dr.formations || typeof dr.formations !== 'object') dr.formations = {}; });
+
+  setupNav(); setupSubtabs();
+  setupJogadoresView(); setupNovoDraftView();
+  setupDraftView(); setupTimesView();
+  setInterval(pollForUpdates, 4000);
+}
+document.addEventListener('DOMContentLoaded', init);
+})();
+</script>
+</body>
+</html>
